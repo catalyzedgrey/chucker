@@ -1,0 +1,87 @@
+{
+  "context": {
+    "build": {
+      "brand": "samsung",
+      "device": "m2s",
+      "fingerprint": "samsung/m2sxxx/m2s:17/CP2A.260605.016/S947BXXS4BZIG_OXM4BZIG:user/release-keys",
+      "id": "CP2A.260605.016",
+      "model": "SM-S947B",
+      "type": "user",
+      "version": {
+        "codename": "REL",
+        "sdk": 37
+      }
+    },
+    "cpuCoreCount": 10,
+    "cpuLocked": false,
+    "cpuMaxFreqHz": 3801000000,
+    "memTotalBytes": 12196868096,
+    "sustainedPerformanceModeEnabled": false,
+    "artMainlineVersion": 372042720,
+    "osCodenameAbbreviated": "REL",
+    "compilationMode": "run-from-apk",
+    "payload": {}
+  },
+  "benchmarks": [
+    {
+      "name": "chuckerListColdStartup[None]",
+      "params": {},
+      "className": "com.chuckerteam.chucker.macrobenchmark.ChuckerStartupBenchmark",
+      "totalRunTimeNs": 43643760781,
+      "metrics": {
+        "timeToInitialDisplayMs": {
+          "minimum": 143.012149,
+          "maximum": 184.117188,
+          "median": 150.374121,
+          "coefficientOfVariation": 0.09868685132757672,
+          "runs": [
+            143.012149,
+            153.397461,
+            146.009922,
+            146.979453,
+            150.319141,
+            144.48836,
+            154.914414,
+            184.117188,
+            150.429101,
+            183.982422
+          ]
+        }
+      },
+      "sampledMetrics": {},
+      "warmupIterations": 0,
+      "repeatIterations": 10,
+      "thermalThrottleSleepSeconds": 0
+    },
+    {
+      "name": "chuckerListColdStartup[BaselineProfile]",
+      "params": {},
+      "className": "com.chuckerteam.chucker.macrobenchmark.ChuckerStartupBenchmark",
+      "totalRunTimeNs": 39615582305,
+      "metrics": {
+        "timeToInitialDisplayMs": {
+          "minimum": 136.645742,
+          "maximum": 180.309766,
+          "median": 141.40708999999998,
+          "coefficientOfVariation": 0.1031664162914324,
+          "runs": [
+            142.193438,
+            140.44375,
+            141.435899,
+            139.144609,
+            136.645742,
+            180.309766,
+            145.826758,
+            137.281484,
+            171.22961,
+            141.378281
+          ]
+        }
+      },
+      "sampledMetrics": {},
+      "warmupIterations": 0,
+      "repeatIterations": 10,
+      "thermalThrottleSleepSeconds": 0
+    }
+  ]
+}

@@ -18,4 +18,4 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-include(":sample", ":library", ":library-no-op")
+include(":sample", ":library", ":library-no-op", ":macrobenchmark")
