@@ -10,7 +10,7 @@ publishing {
             afterEvaluate {
                 from components.release
             }
-            artifactId = project.name
+            artifactId = findProperty("POM_ARTIFACT_ID") ?: project.name
             pom {
                 name = POM_REPO_NAME
                 description = POM_DESCRIPTION
@@ -27,6 +27,12 @@ publishing {
                     url = POM_URL
                 }
                 developers {
+                    developer {
+                        id = 'catalyzedgrey'
+                        name = 'Amr Hany'
+                        url = 'https://github.com/catalyzedgrey'
+                    }
+                    // Original Chucker authors.
                     developer {
                         id = 'cortinico'
                         name = 'Nicola Corti'
