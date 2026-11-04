@@ -54,9 +54,9 @@ tasks.register<Delete>("clean") {
 }
 
 extra.apply {
-    set("minSdkVersion", 21)
+    set("minSdkVersion", 23)
     set("targetSdkVersion", 36)
-    set("compileSdkVersion", 36)
+    set("compileSdkVersion", 37)
 }
 
 nexusPublishing {

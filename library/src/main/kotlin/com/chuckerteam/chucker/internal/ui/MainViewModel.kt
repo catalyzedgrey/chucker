@@ -29,6 +29,8 @@ internal class MainViewModel : ViewModel() {
      */
     private val mutableIsItemSelected = MutableLiveData(false)
 
+    internal val selectedItemIds: LiveData<List<Long>> = mutableSelectedItemIds
+
     internal val transactions: LiveData<List<HttpTransactionTuple>> =
         currentFilter.switchMap { searchQuery ->
             with(RepositoryProvider.transaction()) {

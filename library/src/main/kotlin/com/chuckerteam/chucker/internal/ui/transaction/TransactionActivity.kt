@@ -3,19 +3,12 @@ package com.chuckerteam.chucker.internal.ui.transaction
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.viewpager.widget.ViewPager
 import com.chuckerteam.chucker.R
-import com.chuckerteam.chucker.databinding.ChuckerActivityTransactionBinding
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.support.HarUtils
 import com.chuckerteam.chucker.internal.support.Sharable
@@ -25,6 +18,7 @@ import com.chuckerteam.chucker.internal.support.TransactionDetailsSharable
 import com.chuckerteam.chucker.internal.support.shareAsFile
 import com.chuckerteam.chucker.internal.support.shareAsUtf8Text
 import com.chuckerteam.chucker.internal.ui.BaseChuckerActivity
+import com.chuckerteam.chucker.internal.ui.compose.ChuckerTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,104 +28,48 @@ internal class TransactionActivity : BaseChuckerActivity() {
         TransactionViewModelFactory(intent.getLongExtra(EXTRA_TRANSACTION_ID, 0))
     }
 
-    private lateinit var transactionBinding: ChuckerActivityTransactionBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        transactionBinding = ChuckerActivityTransactionBinding.inflate(layoutInflater)
-
-        with(transactionBinding) {
-            setContentView(root)
-            applyInset()
-            setSupportActionBar(toolbar)
-            setupViewPager(viewPager)
-            tabLayout.setupWithViewPager(viewPager)
+        enableEdgeToEdge()
+        setContent {
+            ChuckerTheme {
+                TransactionScreen(
+                    viewModel = viewModel,
+                    initialPage = selectedTabPosition,
+                    onPageChanged = { selectedTabPosition = it },
+                    onBack = { onBackPressedDispatcher.onBackPressed() },
+                    onShareText = {
+                        shareTransactionAsText { transaction ->
+                            val encodeUrls = viewModel.encodeUrl.value!!
+                            TransactionDetailsSharable(transaction, encodeUrls)
+                        }
+                    },
+                    onShareCurl = {
+                        shareTransactionAsText { transaction ->
+                            TransactionCurlCommandSharable(transaction)
+                        }
+                    },
+                    onShareFile = {
+                        shareTransactionAsFile(EXPORT_TXT_FILE_NAME) { transaction ->
+                            val encodeUrls = viewModel.encodeUrl.value!!
+                            TransactionDetailsSharable(transaction, encodeUrls)
+                        }
+                    },
+                    onShareHar = {
+                        shareTransactionAsFile(EXPORT_HAR_FILE_NAME) { transaction ->
+                            TransactionDetailsHarSharable(
+                                HarUtils.harStringFromTransactions(
+                                    listOf(transaction),
+                                    getString(R.string.chucker_name),
+                                    getString(R.string.chucker_version),
+                                ),
+                            )
+                        }
+                    },
+                )
+            }
         }
-
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        viewModel.transactionTitle.observe(
-            this,
-            Observer { transactionBinding.toolbarTitle.text = it },
-        )
     }
-
-    private fun applyInset() {
-        // Set up window insets to properly handle the UI around system bars
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Apply insets to the main content to avoid overlap with system bars
-        ViewCompat.setOnApplyWindowInsetsListener(transactionBinding.root) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            transactionBinding.appBarLayout.updatePadding(top = insets.top)
-            view.updatePadding(bottom = insets.bottom)
-            WindowInsetsCompat.CONSUMED
-        }
-    }
-
-    override fun onDestroy() {
-        // Detach TabLayout so its TabViews (which hold a ContextThemeWrapper
-        // pointing at this Activity) don't outlive us via delayed MessageQueue
-        // callbacks. Nullifying the adapter releases fragment references.
-        transactionBinding.tabLayout.setupWithViewPager(null)
-        transactionBinding.viewPager.adapter = null
-        super.onDestroy()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.chucker_transaction, menu)
-        setUpUrlEncoding(menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    private fun setUpUrlEncoding(menu: Menu) {
-        val encodeUrlMenuItem = menu.findItem(R.id.encode_url)
-        encodeUrlMenuItem.setOnMenuItemClickListener {
-            viewModel.switchUrlEncoding()
-            return@setOnMenuItemClickListener true
-        }
-        viewModel.encodeUrl.observe(
-            this,
-            Observer { encode ->
-                val icon =
-                    if (encode) {
-                        R.drawable.chucker_ic_encoded_url_white
-                    } else {
-                        R.drawable.chucker_ic_decoded_url_white
-                    }
-                encodeUrlMenuItem.setIcon(icon)
-            },
-        )
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem) =
-        when (item.itemId) {
-            R.id.share_text ->
-                shareTransactionAsText { transaction ->
-                    val encodeUrls = viewModel.encodeUrl.value!!
-                    TransactionDetailsSharable(transaction, encodeUrls)
-                }
-            R.id.share_curl ->
-                shareTransactionAsText { transaction ->
-                    TransactionCurlCommandSharable(transaction)
-                }
-            R.id.share_file ->
-                shareTransactionAsFile(EXPORT_TXT_FILE_NAME) { transaction ->
-                    val encodeUrls = viewModel.encodeUrl.value!!
-                    TransactionDetailsSharable(transaction, encodeUrls)
-                }
-            R.id.share_har ->
-                shareTransactionAsFile(EXPORT_HAR_FILE_NAME) { transaction ->
-                    TransactionDetailsHarSharable(
-                        HarUtils.harStringFromTransactions(
-                            listOf(transaction),
-                            getString(R.string.chucker_name),
-                            getString(R.string.chucker_version),
-                        ),
-                    )
-                }
-            else -> super.onOptionsItemSelected(item)
-        }
 
     private fun shareTransactionAsText(block: (HttpTransaction) -> Sharable): Boolean {
         val transaction = viewModel.transaction.value
@@ -181,18 +119,6 @@ internal class TransactionActivity : BaseChuckerActivity() {
             }
         }
         return true
-    }
-
-    private fun setupViewPager(viewPager: ViewPager) {
-        viewPager.adapter = TransactionPagerAdapter(this, supportFragmentManager)
-        viewPager.addOnPageChangeListener(
-            object : ViewPager.SimpleOnPageChangeListener() {
-                override fun onPageSelected(position: Int) {
-                    selectedTabPosition = position
-                }
-            },
-        )
-        viewPager.currentItem = selectedTabPosition
     }
 
     companion object {
