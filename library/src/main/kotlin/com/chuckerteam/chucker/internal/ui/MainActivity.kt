@@ -7,27 +7,23 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.text.method.LinkMovementMethod
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
-import androidx.appcompat.widget.SearchView
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.core.view.MenuCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
-import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
 import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.api.Chucker
-import com.chuckerteam.chucker.databinding.ChuckerActivityMainBinding
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.data.model.DialogData
 import com.chuckerteam.chucker.internal.support.FileSaver
@@ -37,12 +33,10 @@ import com.chuckerteam.chucker.internal.support.Sharable
 import com.chuckerteam.chucker.internal.support.TransactionDetailsHarSharable
 import com.chuckerteam.chucker.internal.support.TransactionListDetailsSharable
 import com.chuckerteam.chucker.internal.support.shareAsFile
-import com.chuckerteam.chucker.internal.support.showDialog
 import com.chuckerteam.chucker.internal.ui.MainActivity.ExportType.HAR
 import com.chuckerteam.chucker.internal.ui.MainActivity.ExportType.TEXT
-import com.chuckerteam.chucker.internal.ui.transaction.TransactionActivity
-import com.chuckerteam.chucker.internal.ui.transaction.TransactionAdapter
-import com.google.android.material.snackbar.Snackbar
+import com.chuckerteam.chucker.internal.ui.compose.ChuckerConfirmDialog
+import com.chuckerteam.chucker.internal.ui.compose.ChuckerTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,13 +44,11 @@ import okio.Source
 import okio.buffer
 import okio.source
 
-internal class MainActivity :
-    BaseChuckerActivity(),
-    SearchView.OnQueryTextListener {
+internal class MainActivity : BaseChuckerActivity() {
     private val viewModel: MainViewModel by viewModels()
 
-    private lateinit var mainBinding: ChuckerActivityMainBinding
-    private lateinit var transactionsAdapter: TransactionAdapter
+    private val snackbarHostState = SnackbarHostState()
+    private var pendingDialog by mutableStateOf<PendingDialog?>(null)
 
     private val applicationName: CharSequence
         get() = applicationInfo.loadLabel(packageManager)
@@ -86,68 +78,32 @@ internal class MainActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
-        mainBinding = ChuckerActivityMainBinding.inflate(layoutInflater)
-        transactionsAdapter =
-            TransactionAdapter(
-                context = this,
-                onTransactionClick = { transactionId ->
-                    if (viewModel.isItemSelected.value == true) {
-                        viewModel.toggleSelection(transactionId)
-                    } else {
-                        TransactionActivity.start(this, transactionId)
-                    }
-                },
-                onTransactionLongClick = { transactionId ->
-                    viewModel.startSelection(transactionId)
-                },
-            )
-
-        with(mainBinding) {
-            setContentView(root)
-            applyInsets()
-            setSupportActionBar(toolbar)
-            toolbar.subtitle = applicationName
-
-            tutorialLink.movementMethod = LinkMovementMethod.getInstance()
-            transactionsRecyclerView.apply {
-                setHasFixedSize(true)
-                addItemDecoration(
-                    DividerItemDecoration(
-                        this@MainActivity,
-                        DividerItemDecoration.VERTICAL,
-                    ),
+        setContent {
+            ChuckerTheme {
+                TransactionListScreen(
+                    viewModel = viewModel,
+                    applicationName = applicationName,
+                    snackbarHostState = snackbarHostState,
+                    onClear = ::onClearClicked,
+                    onShareText = ::onShareTextClicked,
+                    onShareHar = ::onShareHarClicked,
+                    onSaveText = { showSaveDialog(TEXT) },
+                    onSaveHar = { showSaveDialog(HAR) },
                 )
-                adapter = transactionsAdapter
+                pendingDialog?.let { dialog ->
+                    ChuckerConfirmDialog(
+                        dialogData = dialog.dialogData,
+                        onPositiveClick = dialog.onPositiveClick,
+                        onDismiss = { pendingDialog = null },
+                    )
+                }
             }
-        }
-
-        viewModel.transactions.observe(
-            this,
-        ) { transactionTuples ->
-            transactionsAdapter.submitList(transactionTuples)
-            mainBinding.tutorialGroup.isVisible = transactionTuples.isEmpty()
         }
 
         if (Chucker.showNotifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             handleNotificationsPermission()
-        }
-
-        viewModel.isItemSelected.observe(this) { isSelected ->
-            transactionsAdapter.setSelectionMode(isSelected)
-        }
-    }
-
-    private fun applyInsets() {
-        // Set up window insets to properly handle the UI around system bars
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Apply insets to the main content to avoid overlap with system bars
-        ViewCompat.setOnApplyWindowInsetsListener(mainBinding.root) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            mainBinding.appBarLayout.updatePadding(top = insets.top)
-            view.updatePadding(bottom = insets.bottom)
-            WindowInsetsCompat.CONSUMED
         }
     }
 
@@ -162,12 +118,15 @@ internal class MainActivity :
             }
 
             shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
-                Snackbar
-                    .make(
-                        mainBinding.root,
-                        applicationContext.getString(R.string.chucker_notifications_permission_not_granted),
-                        Snackbar.LENGTH_LONG,
-                    ).setAction(applicationContext.getString(R.string.chucker_change)) {
+                lifecycleScope.launch {
+                    val message = applicationContext.getString(R.string.chucker_notifications_permission_not_granted)
+                    val result =
+                        snackbarHostState.showSnackbar(
+                            message = message,
+                            actionLabel = applicationContext.getString(R.string.chucker_change),
+                            duration = SnackbarDuration.Long,
+                        )
+                    if (result == SnackbarResult.ActionPerformed) {
                         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                             .apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -175,7 +134,8 @@ internal class MainActivity :
                             }.also { intent ->
                                 startActivity(intent)
                             }
-                    }.show()
+                    }
+                }
             }
 
             else -> {
@@ -184,100 +144,64 @@ internal class MainActivity :
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.chucker_transactions_list, menu)
-        MenuCompat.setGroupDividerEnabled(menu, true)
-        setUpSearch(menu)
-        return super.onCreateOptionsMenu(menu)
+    private fun onClearClicked() {
+        showDialog(
+            getClearDialogData(),
+            onPositiveClick = { viewModel.clearTransactions() },
+        )
     }
 
-    private fun setUpSearch(menu: Menu) {
-        val searchMenuItem = menu.findItem(R.id.search)
-        val searchView = searchMenuItem.actionView as SearchView
-        searchView.setOnQueryTextListener(this)
-        searchView.setIconifiedByDefault(true)
+    private fun onShareTextClicked() {
+        val stringId =
+            if (viewModel.isItemSelected.value == true) {
+                R.string.chucker_export_text_selected_http_confirmation
+            } else {
+                R.string.chucker_export_text_http_confirmation
+            }
+        showDialog(
+            getExportDialogData(stringId),
+            onPositiveClick = {
+                exportTransactions(EXPORT_TXT_FILE_NAME) { transactions ->
+                    TransactionListDetailsSharable(transactions, encodeUrls = false)
+                }
+            },
+        )
     }
 
-    @Suppress("LongMethod")
-    override fun onOptionsItemSelected(item: MenuItem): Boolean =
-        when (item.itemId) {
-            R.id.clear -> {
-                showDialog(
-                    getClearDialogData(),
-                    onPositiveClick = {
-                        viewModel.clearTransactions()
-                        resetSelection()
-                    },
-                    onNegativeClick = null,
-                )
-                true
+    private fun onShareHarClicked() {
+        val stringId =
+            if (viewModel.isItemSelected.value == true) {
+                R.string.chucker_export_har_selected_http_confirmation
+            } else {
+                R.string.chucker_export_har_http_confirmation
             }
-
-            R.id.share_text -> {
-                val stringId =
-                    if (viewModel.isItemSelected.value == true) {
-                        R.string.chucker_export_text_selected_http_confirmation
-                    } else {
-                        R.string.chucker_export_text_http_confirmation
-                    }
-                showDialog(
-                    getExportDialogData(stringId),
-                    onPositiveClick = {
-                        exportTransactions(EXPORT_TXT_FILE_NAME) { transactions ->
-                            TransactionListDetailsSharable(transactions, encodeUrls = false)
-                        }
-                    },
-                    onNegativeClick = null,
-                )
-                true
-            }
-
-            R.id.share_har -> {
-                val stringId =
-                    if (viewModel.isItemSelected.value == true) {
-                        R.string.chucker_export_har_selected_http_confirmation
-                    } else {
-                        R.string.chucker_export_har_http_confirmation
-                    }
-                showDialog(
-                    getExportDialogData(stringId),
-                    onPositiveClick = {
-                        exportTransactions(EXPORT_HAR_FILE_NAME) { transactions ->
-                            TransactionDetailsHarSharable(
-                                HarUtils.harStringFromTransactions(
-                                    transactions,
-                                    getString(R.string.chucker_name),
-                                    getString(R.string.chucker_version),
-                                ),
-                            )
-                        }
-                    },
-                    onNegativeClick = null,
-                )
-                true
-            }
-
-            R.id.save_text -> {
-                showSaveDialog(TEXT)
-                true
-            }
-
-            R.id.save_har -> {
-                showSaveDialog(HAR)
-                true
-            }
-
-            else -> {
-                super.onOptionsItemSelected(item)
-            }
-        }
-
-    override fun onQueryTextSubmit(query: String): Boolean = true
-
-    override fun onQueryTextChange(newText: String): Boolean {
-        viewModel.updateItemsFilter(newText)
-        return true
+        showDialog(
+            getExportDialogData(stringId),
+            onPositiveClick = {
+                exportTransactions(EXPORT_HAR_FILE_NAME) { transactions ->
+                    TransactionDetailsHarSharable(
+                        HarUtils.harStringFromTransactions(
+                            transactions,
+                            getString(R.string.chucker_name),
+                            getString(R.string.chucker_version),
+                        ),
+                    )
+                }
+            },
+        )
     }
+
+    private fun showDialog(
+        dialogData: DialogData,
+        onPositiveClick: () -> Unit,
+    ) {
+        pendingDialog = PendingDialog(dialogData, onPositiveClick)
+    }
+
+    private class PendingDialog(
+        val dialogData: DialogData,
+        val onPositiveClick: () -> Unit,
+    )
 
     override fun onSaveInstanceState(outState: Bundle) {
         val selectedIds = viewModel.getSelectedIds()
@@ -289,7 +213,6 @@ internal class MainActivity :
         super.onRestoreInstanceState(savedInstanceState)
         val selectedIds = savedInstanceState.getLongArray(KEY_SELECTED_TRANSACTION_IDS)?.toList().orEmpty()
         viewModel.restoreSelection(selectedIds)
-        transactionsAdapter.setSelectedTransactionIds(selectedIds)
     }
 
     private fun exportTransactions(
@@ -372,7 +295,6 @@ internal class MainActivity :
                     HAR -> saveHarToFile.launch(EXPORT_HAR_FILE_NAME)
                 }
             },
-            onNegativeClick = null,
         )
     }
 
@@ -439,10 +361,6 @@ internal class MainActivity :
     ) {
         TEXT("text/plain"),
         HAR("application/har+json"),
-    }
-
-    private fun resetSelection() {
-        transactionsAdapter.clearSelections()
     }
 
     companion object {
