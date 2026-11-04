@@ -1,7 +1,7 @@
-# Chucker
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.chuckerteam.chucker/library)](https://search.maven.org/artifact/com.github.chuckerteam.chucker/library) ![Pre Merge Checks](https://github.com/ChuckerTeam/chucker/workflows/Pre%20Merge%20Checks/badge.svg?branch=develop)  ![License](https://img.shields.io/github/license/ChuckerTeam/Chucker.svg) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com) [![Join the chat at https://kotlinlang.slack.com](https://img.shields.io/badge/slack-@kotlinlang/chucker-yellow.svg?logo=slack)](https://kotlinlang.slack.com/archives/CRWD6370R) [![Android Weekly](https://img.shields.io/badge/Android%20Weekly-%23375-blue.svg)](https://androidweekly.net/issues/issue-375)
+# Chucker Compose
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.catalyzedgrey/chucker-compose)](https://central.sonatype.com/artifact/io.github.catalyzedgrey/chucker-compose) ![Pre Merge Checks](https://github.com/ChuckerTeam/chucker/workflows/Pre%20Merge%20Checks/badge.svg?branch=develop)  ![License](https://img.shields.io/github/license/ChuckerTeam/Chucker.svg) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com) [![Join the chat at https://kotlinlang.slack.com](https://img.shields.io/badge/slack-@kotlinlang/chucker-yellow.svg?logo=slack)](https://kotlinlang.slack.com/archives/CRWD6370R) [![Android Weekly](https://img.shields.io/badge/Android%20Weekly-%23375-blue.svg)](https://androidweekly.net/issues/issue-375)
 
-_A fork of [Chuck](https://github.com/jgilfelt/chuck)_
+_A fork of [Chucker](https://github.com/ChuckerTeam/chucker) (itself a fork of [Chuck](https://github.com/jgilfelt/chuck)) with the UI rewritten in Jetpack Compose. The public API and Kotlin packages (`com.chuckerteam.chucker.api`) are unchanged, so it's a drop-in replacement; only the Gradle coordinates differ. Requires minSdk 23._
 
 <p align="center">
   <img src="assets/ic_launcher-web.png" alt="chucker icon" width="30%"/>
@@ -37,16 +37,18 @@ Apps using Chucker will display a **notification** showing a summary of ongoing 
 
 ## Getting Started 👣
 
-Chucker is distributed through [Maven Central](https://search.maven.org/artifact/com.github.chuckerteam.chucker/library). To use it you need to add the following **Gradle dependency** to the `build.gradle` file of your android app module (NOT the root file).
+Chucker Compose is distributed through [Maven Central](https://central.sonatype.com/artifact/io.github.catalyzedgrey/chucker-compose). To use it you need to add the following **Gradle dependency** to the `build.gradle` file of your android app module (NOT the root file).
 
-Please note that you should add both the `library` and the `library-no-op` variant to isolate Chucker from release builds as follows:
+Please note that you should add both the `chucker-compose` and the `chucker-compose-no-op` variant to isolate Chucker from release builds as follows:
 
 ```groovy
 dependencies {
-  debugImplementation "com.github.chuckerteam.chucker:library:4.2.0"
-  releaseImplementation "com.github.chuckerteam.chucker:library-no-op:4.2.0"
+  debugImplementation "io.github.catalyzedgrey:chucker-compose:1.0.0"
+  releaseImplementation "io.github.catalyzedgrey:chucker-compose-no-op:1.0.0"
 }
 ```
+
+If you're switching from upstream Chucker, replace `com.github.chuckerteam.chucker:library` / `library-no-op` with the two coordinates above; no code changes are needed.
 
 To start using Chucker, just plug in a new `ChuckerInterceptor` to your OkHttp Client Builder:
 
