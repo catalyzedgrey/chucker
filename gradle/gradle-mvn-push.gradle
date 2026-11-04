@@ -29,7 +29,7 @@ publishing {
                 developers {
                     developer {
                         id = 'catalyzedgrey'
-                        name = 'Amr Hany'
+                        name = 'Amr Eldeeb'
                         url = 'https://github.com/catalyzedgrey'
                     }
                     // Original Chucker authors.
