@@ -28,6 +28,7 @@
     <string name="chucker_save">सहेजें</string>
     <string name="chucker_export_empty_text">निर्यात करने के लिए कुछ नहीं है</string>
     <string name="chucker_export_no_file">निर्यात के लिए फ़ाइल बनाने में विफल</string>
+    <string name="chucker_share_failed">टेक्स्ट के रूप में साझा करने के लिए बहुत बड़ा है। फ़ाइल के रूप में साझा करें का उपयोग करें।</string>
     <string name="chucker_share_as_text">टेक्स्ट के रूप में साझा करें</string>
     <string name="chucker_share_as_curl">curl कमांड के रूप में साझा करें</string>
     <string name="chucker_share_as_file">फ़ाइल के रूप में साझा करें</string>

@@ -28,6 +28,7 @@
     <string name="chucker_save">Сақтау</string>
     <string name="chucker_export_empty_text">Экспорттау үшін деректер жоқ</string>
     <string name="chucker_export_no_file">Экспорттау үшін файл жасау мүмкін емес</string>
+    <string name="chucker_share_failed">Мәтін ретінде бөлісу үшін тым үлкен. Оның орнына файл ретінде бөлісіңіз.</string>
     <string name="chucker_share_as_text">Мәтін ретінде көшіру</string>
     <string name="chucker_share_as_curl">Curl командасымен экспорттау</string>
     <string name="chucker_share_as_file">Файлға экспорттау</string>

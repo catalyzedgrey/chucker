@@ -28,6 +28,7 @@
     <string name="chucker_save">保存</string>
     <string name="chucker_export_empty_text">エクスポートする項目がありません</string>
     <string name="chucker_export_no_file">エクスポート用ファイルの作成に失敗しました</string>
+    <string name="chucker_share_failed">テキストとして共有するには大きすぎます。ファイルとして共有を使用してください。</string>
     <string name="chucker_share_as_text">テキストとして共有</string>
     <string name="chucker_share_as_curl">curlコマンドとして共有</string>
     <string name="chucker_share_as_file">ファイルとして共有</string>

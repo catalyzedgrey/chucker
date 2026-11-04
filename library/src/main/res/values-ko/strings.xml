@@ -28,6 +28,7 @@
     <string name="chucker_save">저장</string>
     <string name="chucker_export_empty_text">내보낼 항목이 없습니다</string>
     <string name="chucker_export_no_file">내보내기 파일 생성에 실패했습니다</string>
+    <string name="chucker_share_failed">텍스트로 공유하기에는 너무 큽니다. 대신 파일로 공유를 사용하세요.</string>
     <string name="chucker_share_as_text">텍스트로 공유</string>
     <string name="chucker_share_as_curl">curl 명령어로 공유</string>
     <string name="chucker_share_as_file">파일로 공유</string>

@@ -3,6 +3,7 @@ package com.chuckerteam.chucker.internal.ui.transaction
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.TransactionTooLargeException
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.support.HarUtils
+import com.chuckerteam.chucker.internal.support.Logger
 import com.chuckerteam.chucker.internal.support.Sharable
 import com.chuckerteam.chucker.internal.support.TransactionCurlCommandSharable
 import com.chuckerteam.chucker.internal.support.TransactionDetailsHarSharable
@@ -39,13 +41,13 @@ internal class TransactionActivity : BaseChuckerActivity() {
                     onPageChanged = { selectedTabPosition = it },
                     onBack = { onBackPressedDispatcher.onBackPressed() },
                     onShareText = {
-                        shareTransactionAsText { transaction ->
+                        shareTransactionAsText(EXPORT_TXT_FILE_NAME) { transaction ->
                             val encodeUrls = viewModel.encodeUrl.value!!
                             TransactionDetailsSharable(transaction, encodeUrls)
                         }
                     },
                     onShareCurl = {
-                        shareTransactionAsText { transaction ->
+                        shareTransactionAsText(EXPORT_CURL_FILE_NAME) { transaction ->
                             TransactionCurlCommandSharable(transaction)
                         }
                     },
@@ -71,7 +73,10 @@ internal class TransactionActivity : BaseChuckerActivity() {
         }
     }
 
-    private fun shareTransactionAsText(block: (HttpTransaction) -> Sharable): Boolean {
+    private fun shareTransactionAsText(
+        fallbackFileName: String,
+        block: (HttpTransaction) -> Sharable,
+    ): Boolean {
         val transaction = viewModel.transaction.value
         if (transaction == null) {
             showToast(getString(R.string.chucker_request_not_ready))
@@ -84,8 +89,14 @@ internal class TransactionActivity : BaseChuckerActivity() {
                     activity = this@TransactionActivity,
                     intentTitle = getString(R.string.chucker_share_transaction_title),
                     intentSubject = getString(R.string.chucker_share_transaction_subject),
+                    fallbackFileName = fallbackFileName,
+                    clipDataLabel = "transaction",
                 )
-            startActivity(shareIntent)
+            if (shareIntent != null) {
+                startShareActivity(shareIntent)
+            } else {
+                Toast.makeText(applicationContext, R.string.chucker_export_no_file, Toast.LENGTH_SHORT).show()
+            }
         }
         return true
     }
@@ -113,7 +124,7 @@ internal class TransactionActivity : BaseChuckerActivity() {
                     )
                 }
             if (shareIntent != null) {
-                startActivity(shareIntent)
+                startShareActivity(shareIntent)
             } else {
                 Toast.makeText(applicationContext, R.string.chucker_export_no_file, Toast.LENGTH_SHORT).show()
             }
@@ -121,8 +132,25 @@ internal class TransactionActivity : BaseChuckerActivity() {
         return true
     }
 
+    /**
+     * Starts a share chooser without letting an oversized intent crash the host app. The system
+     * reports a share intent over the Binder limit as a RuntimeException caused by
+     * TransactionTooLargeException; anything else is rethrown.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    private fun startShareActivity(intent: Intent) {
+        try {
+            startActivity(intent)
+        } catch (e: RuntimeException) {
+            if (e.cause !is TransactionTooLargeException) throw e
+            Logger.error("Share intent is too large to send", e)
+            Toast.makeText(applicationContext, R.string.chucker_share_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
     companion object {
         private const val EXPORT_TXT_FILE_NAME = "transaction.txt"
+        private const val EXPORT_CURL_FILE_NAME = "transaction-curl.txt"
         private const val EXPORT_HAR_FILE_NAME = "transaction.har"
         private const val EXTRA_TRANSACTION_ID = "transaction_id"
         private var selectedTabPosition = 0
