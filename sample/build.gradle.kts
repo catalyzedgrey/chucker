@@ -55,9 +55,8 @@ android {
         }
         // Same as benchmark but without R8, so Baseline Profile rules keep real class names.
         create("nonMinifiedBenchmark") {
-            initWith(getByName("benchmark"))
-            isMinifyEnabled = false
-            isShrinkResources = false
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
         }
     }
 
