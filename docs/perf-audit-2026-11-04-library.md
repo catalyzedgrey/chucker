@@ -105,20 +105,36 @@ Other things checked and found fine:
 - Effects are keyed correctly.
 
 ## Fixes applied (Phase 3)
-None yet, because the baseline in Phase 1 has to be recorded first. Proposed order, one PR each:
+Each change was measured back-to-back against the code just before it, on the same device in the same session. Perfetto traces were analysed with the Perfetto trace processor.
 
-| # | Skill | Change | Files | Macrobench delta |
-| - | ----- | ------ | ----- | ---------------- |
-| 1 | stability/stabilizing-compose-types | `HttpTransactionTuple` `var` → `val` | data/entity/HttpTransactionTuple.kt | pending (list scroll under live traffic) |
-| 2 | lists/optimizing-lazy-layouts | `HorizontalPager(beyondViewportPageCount = 1)` | ui/transaction/TransactionScreen.kt | pending (tab swipe frame timing) |
-| 3 | (measure first) | single `SelectionContainer` around payload list | ui/transaction/TransactionPayloadScreen.kt | pending (large-body scroll) |
-| 4 | recomposition/deferring-state-reads | per-row version state instead of shared map | ui/transaction/TransactionPayloadScreen.kt | pending |
+| # | Skill | Change | Files | Macrobench delta | Outcome |
+| - | ----- | ------ | ----- | ---------------- | ------- |
+| 2 | lists/optimizing-lazy-layouts | `HorizontalPager(beyondViewportPageCount = 1)` | ui/transaction/TransactionScreen.kt | Swipe: frames > 16 ms per iteration 4,4,2,4,3 → 1,4,4,4,4; janky median 22 → 22; P99 19.5 → 20.8 ms (37.0–39.0 °C) | **Rejected:** no measurable gain |
+| 3 | (trace-driven) | One `SelectionContainer` around the payload `LazyColumn`, instead of one per row; `DisableSelection` on the copy row | ui/transaction/TransactionPayloadScreen.kt | Swipe P99 21.0 → **16.4 ms**; frames > 16 ms per iteration 3,4,5,4,4 → 2,2,3,4,3; tab-entry measure pass 18.0–33.6 → **14.4–16.4 ms**; row composition 6.2–10.2 → **4.1–4.5 ms**; body-fling P50 / P90 4.5 / 7.8 → 3.9 / 7.5 ms (37.6–39.3 °C) | **Applied** |
+| 1 | stability/stabilizing-compose-types | `HttpTransactionTuple` `var` → `val` | data/entity/HttpTransactionTuple.kt | pending | next |
+| 4 | recomposition/deferring-state-reads | per-row version state instead of shared map | ui/transaction/TransactionPayloadScreen.kt | pending | low priority |
+
+**Why fix #2 didn't work.** The traces show each slow swipe frame is a payload tab's `LazyColumn` composing its whole first screen inside one measure pass: about 23 rows (`Compose:recompose` ×23) and 22 text layouts (`TextAnnotatedStringNode:measure`). Keeping the neighbouring tab alive only moves that pass. The neighbour gets built in one go as soon as it becomes adjacent, which is still mid-swipe. The hypothesis in Diagnosis #2 (payload rebuilt on every swipe) doesn't explain the jank.
+
+**Fix #3 changes behaviour.** Selection can now span multiple lines, which wasn't possible with one container per line. Checked on the device:
+- long-press selection works
+- dragging a handle across rows works
+- Copy / Select all appear
+- the copy-payload button still works
+
+Lazy-list limitation: a selection can be lost when its rows scroll off screen.
+
+**What's still slow on tab swipes.**
+- Text measurement of the first screen: 3–7 ms, unchanged by fix #3.
+- One RenderThread frame drawing the new text: `flush commands`, up to about 24 ms.
+
+The next lever is to precompose the first rows before the tab appears: hoist the built payload items above the pager and raise the nested prefetch count (`lists/configuring-lazy-prefetch`).
 
 ## Verification (Phase 4)
 Not started.
 
 ## Open items / follow-ups
-1. Phase 3 order, based on the numbers above: fix #2 (pager), then #1 (tuple `val`), then measure whether #3 (SelectionContainer) is worth it.
+1. Phase 3: #3 is applied and #2 was rejected (see the table). Next: #1 (tuple `val`), then precomposing payload rows for tab swipes.
 2. For cleaner Phase 3/4 comparisons, run with the battery at 80% or more, or over wireless adb with the cable unplugged, and run before and after back-to-back.
 3. Generate Chucker's Baseline Profile (`connectedNonMinifiedBenchmarkAndroidTest` + `copyChuckerBaselineProfile`) in Phase 4, after the fixes.
 4. CI stability gate (`compose-stability-analyzer` → `stabilityDump` + `stabilityCheck`) after fix #1, so the tuple can't regress to unstable.
