@@ -5,13 +5,20 @@ Please add your entries according to this format.
 
 ## Unreleased
 
+## Chucker Compose 1.0.0 _(2026-11-04)_
+
+First release of the Compose fork, published as `io.github.catalyzedgrey:chucker-compose` and `io.github.catalyzedgrey:chucker-compose-no-op`. It's based on upstream Chucker after 4.3.1, so it includes upstream's unreleased changes listed below. The Kotlin packages are unchanged, so it's a drop-in replacement for `com.github.chuckerteam.chucker:library`.
+
 ### Changed
 
 -   **Breaking:** minimum supported Android version is now API 23 (was 21), required by Jetpack Compose
 -   Rewrote the Chucker UI (transaction list and transaction details) with Jetpack Compose. Behavior and features are unchanged
+-   Payload text can now be selected across multiple lines. A selection may be cleared when its rows scroll off screen
+-   Faster tab swiping on large payloads: one `SelectionContainer` for the whole payload list instead of one per line (tab-swipe CPU P99 21.0 → 16.4 ms)
 
 ### Added
 
+-   `:macrobenchmark` module with startup, list scroll, tab swipe and large-body benchmarks, plus a Baseline Profile generator
 -   Long-press the payload copy button to choose between copying the raw body or the formatted body [#1613]
 -   Display the connected peer IP in transaction details when Chucker is used as a network interceptor [#1180]
 
@@ -19,6 +26,7 @@ Please add your entries according to this format.
 
 -   Fixed the published AAR being compiled with Java 21 bytecode (class file version 65), which broke compilation on JDK 17. The library now targets Java 17 again, as in 4.3.0 [#1660]
 -   Fixed "Share as cURL" producing a broken command when the request body contains a backslash or a single quote, or a header value contains a backslash, `$` or a backtick [#1698]
+-   Fixed "Share as text" and "Share as curl command" crashing the host app (`TransactionTooLargeException`) or silently failing for large transactions. Content over 100,000 characters is now shared as a `.txt` file
 
 ## Version 4.3.1 _(2026-02-28)_
 
