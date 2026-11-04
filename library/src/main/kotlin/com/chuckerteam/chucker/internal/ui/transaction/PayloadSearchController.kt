@@ -28,7 +28,12 @@ internal class PayloadSearchController(
         val rowIndex: Int,
         val current: Int,
         val total: Int,
-    )
+    ) {
+        companion object {
+            /** Shown as "0 / 0" when a searchable query matches nothing. */
+            val NO_MATCHES = SearchPosition(rowIndex = -1, current = 0, total = 0)
+        }
+    }
 
     var items: List<TransactionPayloadItem> = emptyList()
 
@@ -50,7 +55,7 @@ internal class PayloadSearchController(
         currentSearchQuery = newText
         currentSearchScrollIndex = -1
 
-        if (newText.isNotBlank() && newText.length > NUMBER_OF_IGNORED_SYMBOLS) {
+        if (isSearchable(newText)) {
             val listOfSearchQuery =
                 highlightQueryWithColors(
                     newText,
@@ -228,7 +233,10 @@ internal class PayloadSearchController(
         return removedSpansCount
     }
 
-    private companion object {
-        const val NUMBER_OF_IGNORED_SYMBOLS = 1
+    internal companion object {
+        private const val NUMBER_OF_IGNORED_SYMBOLS = 1
+
+        /** Whether [query] is long enough to be searched; shorter queries clear the search. */
+        fun isSearchable(query: String): Boolean = query.isNotBlank() && query.length > NUMBER_OF_IGNORED_SYMBOLS
     }
 }

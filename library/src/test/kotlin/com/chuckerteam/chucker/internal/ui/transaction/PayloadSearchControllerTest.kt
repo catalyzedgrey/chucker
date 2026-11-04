@@ -102,4 +102,20 @@ internal class PayloadSearchControllerTest {
         assertThat(changed).containsExactly(1)
         assertThat(settle()).isNull()
     }
+
+    @Test
+    fun `only queries of two or more non-blank characters are searchable`() {
+        assertThat(PayloadSearchController.isSearchable("")).isFalse()
+        assertThat(PayloadSearchController.isSearchable("a")).isFalse()
+        assertThat(PayloadSearchController.isSearchable("  ")).isFalse()
+        assertThat(PayloadSearchController.isSearchable("am")).isTrue()
+        assertThat(PayloadSearchController.isSearchable("amr")).isTrue()
+    }
+
+    @Test
+    fun `no-matches summary reads as zero of zero`() {
+        val summary = PayloadSearchController.SearchPosition.NO_MATCHES
+
+        assertThat("${summary.current} / ${summary.total}").isEqualTo("0 / 0")
+    }
 }
