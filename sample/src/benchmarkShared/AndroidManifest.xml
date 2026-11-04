@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only merged into the benchmark / nonMinifiedBenchmark build types. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- Seeds Chucker with deterministic, offline traffic for :macrobenchmark. -->
+        <activity
+            android:name="com.chuckerteam.chucker.sample.benchmark.BenchmarkTrafficActivity"
+            android:exported="true" />
+
+        <!-- Let :macrobenchmark launch the Chucker list directly (it is not exported in the library). -->
+        <activity
+            android:name="com.chuckerteam.chucker.internal.ui.MainActivity"
+            android:exported="true"
+            tools:node="merge" />
+
+        <!-- Lets Macrobenchmark / Perfetto profile this non-debuggable build. -->
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+    </application>
+</manifest>

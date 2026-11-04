@@ -40,6 +40,34 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("debug")
         }
+        // Release-like build of the sample that bundles the real :library (not :library-no-op),
+        // used by :macrobenchmark to measure the Chucker UI with R8 on.
+        create("benchmark") {
+            initWith(getByName("release"))
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+                "benchmark-rules.pro",
+            )
+            matchingFallbacks += listOf("release")
+        }
+        // Same as benchmark but without R8, so Baseline Profile rules keep real class names.
+        create("nonMinifiedBenchmark") {
+            initWith(getByName("benchmark"))
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+    }
+
+    sourceSets {
+        listOf("benchmark", "nonMinifiedBenchmark").forEach { buildType ->
+            getByName(buildType) {
+                java.srcDir("src/benchmarkShared/kotlin")
+                manifest.srcFile("src/benchmarkShared/AndroidManifest.xml")
+            }
+        }
     }
 
     signingConfigs {
@@ -82,6 +110,9 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(project(":library"))
     releaseImplementation(project(":library-no-op"))
+    "benchmarkImplementation"(project(":library"))
+    "nonMinifiedBenchmarkImplementation"(project(":library"))
+    implementation(libs.androidx.profileinstaller)
 
     implementation(libs.jetbrains.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.android)
