@@ -28,6 +28,7 @@
     <string name="chucker_save">حفظ</string>
     <string name="chucker_export_empty_text">لا يوجد شيء للتصدير</string>
     <string name="chucker_export_no_file">فشل إنشاء ملف للتصدير</string>
+    <string name="chucker_share_failed">المحتوى أكبر من أن تتم مشاركته كنص. استخدم المشاركة كملف بدلاً من ذلك.</string>
     <string name="chucker_share_as_text">مشاركة كنص</string>
     <string name="chucker_share_as_curl">مشاركة كأمر curl</string>
     <string name="chucker_share_as_file">مشاركة كملف</string>

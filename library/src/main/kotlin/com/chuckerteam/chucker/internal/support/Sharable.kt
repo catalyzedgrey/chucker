@@ -9,10 +9,19 @@ import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.Buffer
 import okio.BufferedSource
 import okio.Source
 import okio.buffer
 import okio.sink
+
+/**
+ * Longest text that is shared inline as `EXTRA_TEXT`. The share intent has to fit in the
+ * ~1 MB Binder transaction buffer, and the chooser carries the text several times over:
+ * 250 KB of cURL text produced a 768 KB parcel that failed to send, and 800 KB crashed the
+ * host app with a TransactionTooLargeException. Anything longer is shared as a file instead.
+ */
+internal const val MAX_INLINE_SHARE_TEXT_LENGTH = 100_000
 
 internal interface Sharable {
     fun toSharableContent(context: Context): Source
@@ -23,12 +32,25 @@ internal fun Sharable.toSharableUtf8Content(context: Context) =
         .buffer()
         .use(BufferedSource::readUtf8)
 
+/**
+ * Shares this content as plain text, or as a text file named [fallbackFileName] when it is
+ * longer than [MAX_INLINE_SHARE_TEXT_LENGTH]. Returns null if the fallback file can't be created.
+ */
 internal suspend fun Sharable.shareAsUtf8Text(
     activity: Activity,
     intentTitle: String,
     intentSubject: String,
-): Intent {
+    fallbackFileName: String,
+    clipDataLabel: String,
+): Intent? {
     val content = withContext(Dispatchers.Default) { toSharableUtf8Content(activity) }
+    if (content.length > MAX_INLINE_SHARE_TEXT_LENGTH) {
+        val uri =
+            withContext(Dispatchers.IO) {
+                writeSourceToFile(activity, fallbackFileName, Buffer().writeUtf8(content))
+            } ?: return null
+        return fileShareIntent(activity, uri, intentTitle, intentSubject, clipDataLabel)
+    }
     return ShareCompat
         .IntentBuilder(activity)
         .setType("text/plain")
@@ -41,6 +63,12 @@ internal suspend fun Sharable.shareAsUtf8Text(
 internal fun Sharable.writeToFile(
     context: Context,
     fileName: String,
+): Uri? = writeSourceToFile(context, fileName, toSharableContent(context))
+
+private fun writeSourceToFile(
+    context: Context,
+    fileName: String,
+    fileContent: Source,
 ): Uri? {
     val cache = context.cacheDir
     if (cache == null) {
@@ -54,7 +82,6 @@ internal fun Sharable.writeToFile(
         return null
     }
 
-    val fileContent = toSharableContent(context)
     file.sink().buffer().use { it.writeAll(fileContent) }
 
     return FileProvider.getUriForFile(
@@ -72,6 +99,16 @@ internal fun Sharable.shareAsFile(
     clipDataLabel: String,
 ): Intent? {
     val uri = writeToFile(activity, fileName) ?: return null
+    return fileShareIntent(activity, uri, intentTitle, intentSubject, clipDataLabel)
+}
+
+private fun fileShareIntent(
+    activity: Activity,
+    uri: Uri,
+    intentTitle: String,
+    intentSubject: String,
+    clipDataLabel: String,
+): Intent {
     val shareIntent =
         ShareCompat
             .IntentBuilder(activity)

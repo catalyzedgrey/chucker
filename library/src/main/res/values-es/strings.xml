@@ -28,6 +28,7 @@
     <string name="chucker_save">Guardar</string>
     <string name="chucker_export_empty_text">Nada que exportar</string>
     <string name="chucker_export_no_file">Fallo al crear archivo para exportar</string>
+    <string name="chucker_share_failed">Demasiado grande para compartir como texto. Usa Compartir como archivo.</string>
     <string name="chucker_share_as_text">Compartir como texto</string>
     <string name="chucker_share_as_curl">Compartir como comando curl</string>
     <string name="chucker_share_as_file">Compartir como archivo</string>

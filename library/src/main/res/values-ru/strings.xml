@@ -28,6 +28,7 @@
     <string name="chucker_save">Сохранить</string>
     <string name="chucker_export_empty_text">Нет данных для экспорта</string>
     <string name="chucker_export_no_file">Не удалось создать файл для экспорта</string>
+    <string name="chucker_share_failed">Слишком большой объём для отправки текстом. Используйте отправку файлом.</string>
     <string name="chucker_share_as_text">Копировать текстом</string>
     <string name="chucker_share_as_curl">Экспорт curl-командой</string>
     <string name="chucker_share_as_file">Экспорт в файл</string>
