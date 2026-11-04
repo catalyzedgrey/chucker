@@ -1,0 +1,103 @@
+{
+  "context": {
+    "build": {
+      "brand": "samsung",
+      "device": "m2s",
+      "fingerprint": "samsung/m2sxxx/m2s:17/CP2A.260605.016/S947BXXS4BZIG_OXM4BZIG:user/release-keys",
+      "id": "CP2A.260605.016",
+      "model": "SM-S947B",
+      "type": "user",
+      "version": {
+        "codename": "REL",
+        "sdk": 37
+      }
+    },
+    "cpuCoreCount": 10,
+    "cpuLocked": false,
+    "cpuMaxFreqHz": 3801000000,
+    "memTotalBytes": 12196868096,
+    "sustainedPerformanceModeEnabled": false,
+    "artMainlineVersion": 372042720,
+    "osCodenameAbbreviated": "REL",
+    "compilationMode": "run-from-apk",
+    "payload": {}
+  },
+  "benchmarks": [
+    {
+      "name": "swipeTransactionTabs",
+      "params": {},
+      "className": "com.chuckerteam.chucker.macrobenchmark.ChuckerTransactionBenchmark",
+      "totalRunTimeNs": 65314760899,
+      "metrics": {
+        "frameCount": {
+          "minimum": 256.0,
+          "maximum": 274.0,
+          "median": 259.0,
+          "coefficientOfVariation": 0.027792789299971726,
+          "runs": [
+            274.0,
+            258.0,
+            259.0,
+            256.0,
+            259.0
+          ]
+        }
+      },
+      "sampledMetrics": {
+        "frameDurationCpuMs": {
+          "P50": 4.0491405,
+          "P90": 5.5374415,
+          "P95": 6.7230465,
+          "P99": 20.81107420000002
+        },
+        "frameOverrunMs": {
+          "P50": -2.745083,
+          "P90": -0.7415864999999999,
+          "P95": 1.52165875,
+          "P99": 13.70842100000001
+        }
+      },
+      "warmupIterations": 0,
+      "repeatIterations": 5,
+      "thermalThrottleSleepSeconds": 0
+    },
+    {
+      "name": "scrollLargeResponseBody",
+      "params": {},
+      "className": "com.chuckerteam.chucker.macrobenchmark.ChuckerTransactionBenchmark",
+      "totalRunTimeNs": 38273116992,
+      "metrics": {
+        "frameCount": {
+          "minimum": 44.0,
+          "maximum": 91.0,
+          "median": 48.0,
+          "coefficientOfVariation": 0.3434112715493804,
+          "runs": [
+            48.0,
+            91.0,
+            44.0,
+            52.0,
+            48.0
+          ]
+        }
+      },
+      "sampledMetrics": {
+        "frameDurationCpuMs": {
+          "P50": 4.588437,
+          "P90": 8.398133000000001,
+          "P95": 10.099355699999997,
+          "P99": 16.349222360000006
+        },
+        "frameOverrunMs": {
+          "P50": -1.491576,
+          "P90": 2.6723834,
+          "P95": 4.146146599999999,
+          "P99": 10.15854768
+        }
+      },
+      "warmupIterations": 0,
+      "repeatIterations": 5,
+      "thermalThrottleSleepSeconds": 0
+    }
+  ]
+}

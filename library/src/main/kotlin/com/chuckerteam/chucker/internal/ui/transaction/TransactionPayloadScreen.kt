@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -233,27 +234,28 @@ private fun PayloadList(
     onCopyFormatted: () -> Unit,
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 16.dp),
-        ) {
-            itemsIndexed(items) { index, item ->
-                when (item) {
-                    is TransactionPayloadItem.HeaderItem -> {
-                        SelectionContainer {
+        // One container for the whole list: a SelectionContainer per row made composing a
+        // payload tab's first screen (~23 rows) cost a whole frame on every tab swipe.
+        SelectionContainer {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 16.dp),
+            ) {
+                itemsIndexed(items) { index, item ->
+                    when (item) {
+                        is TransactionPayloadItem.HeaderItem ->
                             Text(
                                 text = remember(item) { item.headers.toAnnotatedString() },
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                                 style = TextStyle(fontSize = PayloadTextSize),
                             )
-                        }
-                    }
-                    is TransactionPayloadItem.CopyItem ->
-                        PayloadCopyRow(onCopyRaw = onCopyRaw, onCopyFormatted = onCopyFormatted)
-                    is TransactionPayloadItem.BodyLineItem -> {
-                        val version = rowVersions[index]
-                        SelectionContainer {
+                        is TransactionPayloadItem.CopyItem ->
+                            DisableSelection {
+                                PayloadCopyRow(onCopyRaw = onCopyRaw, onCopyFormatted = onCopyFormatted)
+                            }
+                        is TransactionPayloadItem.BodyLineItem -> {
+                            val version = rowVersions[index]
                             Text(
                                 text = remember(item, version) { item.line.toAnnotatedString() },
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -265,8 +267,8 @@ private fun PayloadList(
                                 minLines = 1,
                             )
                         }
+                        is TransactionPayloadItem.ImageItem -> PayloadImage(item)
                     }
-                    is TransactionPayloadItem.ImageItem -> PayloadImage(item)
                 }
             }
         }
