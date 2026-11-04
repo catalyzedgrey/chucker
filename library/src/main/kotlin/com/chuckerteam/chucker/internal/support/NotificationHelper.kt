@@ -140,10 +140,5 @@ internal class NotificationHelper(
         notificationManager.cancel(TRANSACTION_NOTIFICATION_ID)
     }
 
-    private fun immutableFlag() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_IMMUTABLE
-        } else {
-            0
-        }
+    private fun immutableFlag() = PendingIntent.FLAG_IMMUTABLE
 }

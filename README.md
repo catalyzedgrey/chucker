@@ -68,7 +68,7 @@ You can find older version of Chucker here: [![JitPack](https://jitpack.io/v/Chu
 Don't forget to check the [changelog](CHANGELOG.md) to have a look at all the changes in the latest version of Chucker.
 
 * Compatible with **OkHTTP 4**
-* **API >= 21** compatible
+* **API >= 23** compatible
 * Easy to integrate (just 2 gradle `implementation` lines).
 * Works **out of the box**, no customization needed.
 * **Empty release artifact** 🧼 (no traces of Chucker in your final APK).

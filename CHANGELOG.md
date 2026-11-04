@@ -5,6 +5,11 @@ Please add your entries according to this format.
 
 ## Unreleased
 
+### Changed
+
+-   **Breaking:** minimum supported Android version is now API 23 (was 21), required by Jetpack Compose
+-   Rewrote the Chucker UI (transaction list and transaction details) with Jetpack Compose. Behavior and features are unchanged
+
 ### Added
 
 -   Long-press the payload copy button to choose between copying the raw body or the formatted body [#1613]
