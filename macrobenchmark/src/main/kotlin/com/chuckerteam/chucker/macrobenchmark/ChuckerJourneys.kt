@@ -17,6 +17,7 @@ private const val SEEDED_ROW_TEXT = "/benchmark/"
 private const val SEED_TIMEOUT_MS = 60_000L
 private const val UI_TIMEOUT_MS = 10_000L
 internal const val FLINGS = 3
+private const val VISIBLE_TEXTS_IN_ERRORS = 12
 
 /**
  * Wipes Chucker's database and records [seedCount] fake transactions (no network involved).
@@ -60,7 +61,7 @@ internal fun MacrobenchmarkScope.openChuckerList() {
 internal fun MacrobenchmarkScope.waitForList(): UiObject2 {
     // Any seeded row: with live traffic the large JSON row is quickly pushed off screen.
     checkNotNull(device.wait(Until.findObject(By.textContains(SEEDED_ROW_TEXT)), UI_TIMEOUT_MS)) {
-        "Chucker list did not show the seeded transactions"
+        "Chucker list did not show the seeded transactions. On screen: ${visibleTexts()}"
     }
     return checkNotNull(device.findObject(By.scrollable(true))) { "Transaction list is not scrollable" }
 }
@@ -98,3 +99,7 @@ internal fun MacrobenchmarkScope.openResponseBody() {
         "Response body did not render"
     }
 }
+
+/** First texts currently on screen, to make UI-wait failures diagnosable. */
+private fun MacrobenchmarkScope.visibleTexts(): List<String> =
+    device.findObjects(By.textStartsWith("")).mapNotNull { it.text }.take(VISIBLE_TEXTS_IN_ERRORS)
