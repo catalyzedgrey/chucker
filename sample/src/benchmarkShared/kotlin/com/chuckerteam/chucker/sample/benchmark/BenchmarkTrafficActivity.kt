@@ -22,6 +22,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
+import java.io.File
 import kotlin.random.Random
 
 /**
@@ -35,10 +36,12 @@ import kotlin.random.Random
  *   The last (newest, top of the list) is always `GET /benchmark/large-json` with a large JSON body.
  * - [EXTRA_BASE64_KB]: also record [BASE64_IMAGE_PATH], a POST whose JSON body (echoed in the
  *   response) carries a base64 string of about this many KB. It becomes the newest row.
+ * - [EXTRA_RESPONSE_FILE]: also record `GET` [CUSTOM_RESPONSE_PATH], answered with the JSON in this
+ *   file under the app's external files dir (push it with adb). It becomes the newest row.
  * - [EXTRA_MAX_CONTENT_LENGTH]: Chucker's `maxContentLength` (bytes stored per body); default 250,000.
  * - [EXTRA_LIVE_COUNT] / [EXTRA_LIVE_INTERVAL_MS]: keep recording this many extra transactions
  *   in the background after seeding, one per interval, to simulate a busy host app while
- *   the Chucker UI is on screen.
+ *   the Chucker UI is on screen. [EXTRA_LIVE_DELAY_MS] postpones the first one.
  */
 class BenchmarkTrafficActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +55,9 @@ class BenchmarkTrafficActivity : Activity() {
         val seedCount = intent.getIntExtra(EXTRA_SEED_COUNT, DEFAULT_SEED_COUNT)
         val liveCount = intent.getIntExtra(EXTRA_LIVE_COUNT, 0)
         val liveIntervalMs = intent.getLongExtra(EXTRA_LIVE_INTERVAL_MS, DEFAULT_LIVE_INTERVAL_MS)
+        val liveDelayMs = intent.getLongExtra(EXTRA_LIVE_DELAY_MS, 0L)
         val base64Kb = intent.getIntExtra(EXTRA_BASE64_KB, 0)
+        val responseFile = intent.getStringExtra(EXTRA_RESPONSE_FILE)
         val client = createClient(intent.getLongExtra(EXTRA_MAX_CONTENT_LENGTH, 0L))
 
         processScope.launch {
@@ -61,11 +66,16 @@ class BenchmarkTrafficActivity : Activity() {
                 // Recorded last so it is the newest row, at the top of the list.
                 client.call(LARGE_JSON_PATH)
                 if (base64Kb > 0) client.postBase64Image(base64Kb)
+                if (responseFile != null) {
+                    FakeServer.customBody = File(getExternalFilesDir(null), responseFile).readText()
+                    client.call(CUSTOM_RESPONSE_PATH)
+                }
                 // Chucker persists asynchronously; give the last writes time to land.
                 delay(SETTLE_DELAY_MS)
             }
             status.text = DONE_TEXT
             withContext(Dispatchers.IO) {
+                if (liveCount > 0) delay(liveDelayMs)
                 repeat(liveCount) {
                     delay(liveIntervalMs)
                     client.call("/benchmark/live/$it")
@@ -117,6 +127,20 @@ class BenchmarkTrafficActivity : Activity() {
         private val json = "application/json".toMediaType()
         private val statusCodes = intArrayOf(200, 200, 200, 201, 204, 301, 404, 500)
 
+        @Volatile
+        var customBody: String = ""
+
+        fun customResponse(request: Request): Response =
+            Response
+                .Builder()
+                .request(request)
+                .protocol(Protocol.HTTP_2)
+                .code(200)
+                .message("Benchmark")
+                .header("Content-Type", "application/json; charset=utf-8")
+                .body(customBody.toResponseBody(json))
+                .build()
+
         fun echo(request: Request): Response {
             val buffer = Buffer()
             request.body?.writeTo(buffer)
@@ -135,6 +159,7 @@ class BenchmarkTrafficActivity : Activity() {
             val request = chain.request()
             val path = request.url.encodedPath
             if (path == BASE64_IMAGE_PATH) return echo(request)
+            if (path == CUSTOM_RESPONSE_PATH) return customResponse(request)
             val isLarge = path == LARGE_JSON_PATH
             val code = if (isLarge) 200 else statusCodes[path.hashCode().mod(statusCodes.size)]
             val body =
@@ -160,10 +185,13 @@ class BenchmarkTrafficActivity : Activity() {
         const val EXTRA_SEED_COUNT = "seedCount"
         const val EXTRA_LIVE_COUNT = "liveCount"
         const val EXTRA_LIVE_INTERVAL_MS = "liveIntervalMs"
+        const val EXTRA_LIVE_DELAY_MS = "liveDelayMs"
         const val DONE_TEXT = "seed-done"
         const val LARGE_JSON_PATH = "/benchmark/large-json"
         const val BASE64_IMAGE_PATH = "/benchmark/base64-image"
         const val EXTRA_BASE64_KB = "base64Kb"
+        const val EXTRA_RESPONSE_FILE = "responseFile"
+        const val CUSTOM_RESPONSE_PATH = "/benchmark/custom-response"
         const val EXTRA_MAX_CONTENT_LENGTH = "maxContentLength"
 
         private const val CHUCKER_DB_NAME = "chucker.db"

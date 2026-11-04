@@ -36,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -72,6 +73,7 @@ import kotlinx.coroutines.withContext
 
 private const val DELAY_FOR_SEARCH_SCROLL = 600L
 private const val LUMINANCE_THRESHOLD = 0.25
+private const val DISABLED_NAV_BUTTON_ALPHA = 0.38f
 private val PayloadTextSize = 14.sp
 
 /** Content of the Request / Response tab. [searchQuery] is the text typed into the toolbar search. */
@@ -131,7 +133,14 @@ internal fun TransactionPayloadScreen(
 
     LaunchedEffect(searchQuery) {
         val hasResults = controller.onQueryChanged(searchQuery, backgroundSpanColor, foregroundSpanColor)
-        if (!hasResults) summaryVisible = false
+        if (!hasResults) {
+            // A searchable query with no matches shows "0 / 0" so the user knows the search ran.
+            summary = PayloadSearchController.SearchPosition.NO_MATCHES
+            summaryVisible = PayloadSearchController.isSearchable(searchQuery)
+        } else if (summary == PayloadSearchController.SearchPosition.NO_MATCHES) {
+            // Matches again: don't leave a stale "0 / 0" up until the first match is selected.
+            summaryVisible = false
+        }
         delay(DELAY_FOR_SEARCH_SCROLL)
         val position =
             lifecycle.withResumed {
@@ -204,14 +213,16 @@ private fun SearchSummaryBar(
             color = colorResource(R.color.chucker_color_on_primary),
             fontSize = 16.sp,
         )
-        SearchNavButton(R.drawable.chucker_ic_arrow_up, onUp)
-        SearchNavButton(R.drawable.chucker_ic_arrow_down, onDown)
+        val hasMatches = summary.total > 0
+        SearchNavButton(R.drawable.chucker_ic_arrow_up, enabled = hasMatches, onClick = onUp)
+        SearchNavButton(R.drawable.chucker_ic_arrow_down, enabled = hasMatches, onClick = onDown)
     }
 }
 
 @Composable
 private fun SearchNavButton(
     drawableRes: Int,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Icon(
@@ -220,7 +231,8 @@ private fun SearchNavButton(
         tint = Color.Unspecified,
         modifier =
             Modifier
-                .clickable(onClick = onClick)
+                .clickable(enabled = enabled, onClick = onClick)
+                .alpha(if (enabled) 1f else DISABLED_NAV_BUTTON_ALPHA)
                 .padding(horizontal = 8.dp, vertical = 12.dp),
     )
 }
