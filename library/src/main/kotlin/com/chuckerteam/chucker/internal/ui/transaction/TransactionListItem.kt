@@ -1,5 +1,6 @@
 package com.chuckerteam.chucker.internal.ui.transaction
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,11 +23,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.data.entity.HttpTransactionTuple
+import com.chuckerteam.chucker.internal.ui.compose.ChuckerTheme
 import java.text.DateFormat
 import javax.net.ssl.HttpsURLConnection
 
@@ -90,7 +93,8 @@ internal fun TransactionListItem(
                     } else {
                         Modifier
                     },
-                ).combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                )
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(8.dp),
     ) {
         Row {
@@ -100,7 +104,10 @@ internal fun TransactionListItem(
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.width(56.dp).padding(end = 16.dp),
+                modifier =
+                    Modifier
+                        .width(56.dp)
+                        .padding(end = 16.dp),
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -157,7 +164,10 @@ internal fun TransactionListItem(
                 text = DateFormat.getTimeInstance().format(transaction.requestDate),
                 color = textColor,
                 fontSize = 14.sp,
-                modifier = Modifier.weight(2f).padding(start = 56.dp),
+                modifier =
+                    Modifier
+                        .weight(2f)
+                        .padding(start = 56.dp),
             )
             Text(
                 text = duration,
@@ -194,5 +204,103 @@ private fun HttpTransactionTuple.statusColor(): Color {
         (responseCode!! >= HttpsURLConnection.HTTP_BAD_REQUEST) -> color400
         (responseCode!! >= HttpsURLConnection.HTTP_MULT_CHOICE) -> color300
         else -> colorDefault
+    }
+}
+
+private const val PREVIEW_REQUEST_DATE = 1_700_000_000_000L
+
+@Suppress("LongParameterList")
+private fun previewTuple(
+    id: Long,
+    method: String? = "GET",
+    path: String = "/api/users",
+    scheme: String = "https",
+    responseCode: Int? = 200,
+    tookMs: Long? = 142,
+    error: String? = null,
+    graphQlOperationName: String? = null,
+    isWebSocket: Boolean = false,
+) = HttpTransactionTuple(
+    id = id,
+    requestDate = PREVIEW_REQUEST_DATE,
+    tookMs = tookMs,
+    protocol = "h2",
+    method = method,
+    host = "api.example.com",
+    path = path,
+    scheme = scheme,
+    responseCode = responseCode,
+    requestPayloadSize = 128,
+    responsePayloadSize = 2_048,
+    error = error,
+    graphQlDetected = graphQlOperationName != null,
+    graphQlOperationName = graphQlOperationName,
+    isWebSocket = isWebSocket,
+    sentCount = if (isWebSocket) 12 else 0,
+    receivedCount = if (isWebSocket) 34 else 0,
+)
+
+private val previewTransactions =
+    listOf(
+        previewTuple(id = 1),
+        previewTuple(
+            id = 2,
+            method = "POST",
+            path = "/api/login",
+            scheme = "http",
+            responseCode = 302,
+        ),
+        previewTuple(id = 3, path = "/api/users/42", responseCode = 404),
+        previewTuple(id = 4, method = "PUT", path = "/api/orders", responseCode = 500),
+        previewTuple(id = 5, path = "/api/slow", responseCode = null, tookMs = null),
+        previewTuple(
+            id = 6,
+            path = "/api/offline",
+            responseCode = null,
+            error = "UnknownHostException",
+        ),
+        previewTuple(id = 7, method = "POST", path = "/graphql", graphQlOperationName = "GetUser"),
+        previewTuple(
+            id = 8,
+            method = null,
+            path = "/chat",
+            responseCode = 101,
+            tookMs = null,
+            isWebSocket = true,
+        ),
+    )
+
+@Preview(name = "Transaction states", showBackground = true)
+@Preview(
+    name = "Transaction states dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun TransactionListItemPreview() {
+    ChuckerTheme {
+        Column {
+            previewTransactions.forEach { transaction ->
+                TransactionListItem(
+                    transaction = transaction,
+                    isSelected = false,
+                    onClick = {},
+                    onLongClick = {},
+                )
+            }
+        }
+    }
+}
+
+@Preview(name = "Selected", showBackground = true)
+@Composable
+private fun TransactionListItemSelectedPreview() {
+    ChuckerTheme {
+        TransactionListItem(
+            transaction = previewTransactions.first(),
+            isSelected = true,
+            onClick = {},
+            onLongClick = {},
+        )
     }
 }
