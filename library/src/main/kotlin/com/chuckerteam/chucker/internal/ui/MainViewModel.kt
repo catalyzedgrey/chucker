@@ -9,9 +9,12 @@ import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.data.entity.HttpTransactionTuple
+import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.repository.RepositoryProvider
 import com.chuckerteam.chucker.internal.support.NotificationHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal class MainViewModel : ViewModel() {
     /**
@@ -60,6 +63,12 @@ internal class MainViewModel : ViewModel() {
             RepositoryProvider.transaction().getAllTransactions()
         }
     }
+
+    /** Messages of the WebSocket connections among [transactions], for exports. */
+    suspend fun getWebSocketMessages(transactions: List<HttpTransaction>): Map<Long, List<WebSocketMessage>> =
+        withContext(Dispatchers.IO) {
+            RepositoryProvider.webSocketMessages().getMessagesForExport(transactions)
+        }
 
     /**
      * Toggles the selection state of the given transaction ID.

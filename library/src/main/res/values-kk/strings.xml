@@ -93,4 +93,5 @@
     <string name="chucker_websocket_filter_received">Алынған</string>
     <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
     <string name="chucker_websocket_no_matches">Сәйкес хабарлар жоқ</string>
+    <string name="chucker_websocket_attachment">%3$s тіркемесі %1$d/%2$d</string>
 </resources>

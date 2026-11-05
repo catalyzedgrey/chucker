@@ -9,6 +9,8 @@ import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.repository.RepositoryProvider
 import com.chuckerteam.chucker.internal.support.combineLatest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class TransactionViewModel(
     transactionId: Long,
@@ -61,6 +63,16 @@ internal class TransactionViewModel(
             .combineLatest(encodeUrl) { requiresEncoding, encodeUrl ->
                 !(requiresEncoding && encodeUrl)
             }
+
+    /** The connection's messages for exports; empty for HTTP transactions. */
+    suspend fun webSocketMessagesForExport(transaction: HttpTransaction): List<WebSocketMessage> =
+        if (transaction.isWebSocket) {
+            withContext(Dispatchers.IO) {
+                RepositoryProvider.webSocketMessages().getMessagesForExport(listOf(transaction))[transaction.id]
+            }.orEmpty()
+        } else {
+            emptyList()
+        }
 
     fun switchUrlEncoding() = encodeUrl(!encodeUrl.value!!)
 

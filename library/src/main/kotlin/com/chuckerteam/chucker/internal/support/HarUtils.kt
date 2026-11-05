@@ -1,6 +1,7 @@
 package com.chuckerteam.chucker.internal.support
 
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
+import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.har.Har
 import com.chuckerteam.chucker.internal.data.har.log.Creator
 import kotlinx.coroutines.Dispatchers
@@ -13,14 +14,16 @@ internal object HarUtils {
         transactions: List<HttpTransaction>,
         name: String,
         version: String,
+        webSocketMessages: Map<Long, List<WebSocketMessage>> = emptyMap(),
     ): String =
         withContext(Dispatchers.Default) {
             JsonConverter.nonNullSerializerInstance
-                .toJson(fromHttpTransactions(transactions, Creator(name, version)))
+                .toJson(fromHttpTransactions(transactions, Creator(name, version), webSocketMessages))
         }
 
     internal fun fromHttpTransactions(
         transactions: List<HttpTransaction>,
         creator: Creator,
-    ): Har = Har(transactions, creator)
+        webSocketMessages: Map<Long, List<WebSocketMessage>> = emptyMap(),
+    ): Har = Har(transactions, creator, webSocketMessages)
 }

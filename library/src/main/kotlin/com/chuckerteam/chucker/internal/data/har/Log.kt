@@ -1,6 +1,7 @@
 package com.chuckerteam.chucker.internal.data.har
 
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
+import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.har.log.Browser
 import com.chuckerteam.chucker.internal.data.har.log.Creator
 import com.chuckerteam.chucker.internal.data.har.log.Entry
@@ -17,8 +18,12 @@ internal data class Log(
     @SerializedName("entries") val entries: List<Entry>,
     @SerializedName("comment") val comment: String? = null,
 ) {
-    constructor(transactions: List<HttpTransaction>, creator: Creator) : this(
+    constructor(
+        transactions: List<HttpTransaction>,
+        creator: Creator,
+        webSocketMessages: Map<Long, List<WebSocketMessage>> = emptyMap(),
+    ) : this(
         creator = creator,
-        entries = transactions.map { Entry(it) },
+        entries = transactions.map { Entry(it, webSocketMessages[it.id].orEmpty()) },
     )
 }

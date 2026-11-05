@@ -12,6 +12,7 @@ import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage.Direction
 import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage.Type
 import com.chuckerteam.chucker.internal.data.entity.createRequest
+import com.chuckerteam.chucker.internal.data.repository.WebSocketMessageDatabaseRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -71,6 +72,22 @@ internal class WebSocketMessageDaoTest {
             messageDao.insertAll(listOf(message(id, 3), message(id, 1), message(id, 2)))
 
             assertThat(messageDao.getAllForTransaction(id).map { it.seq }).containsExactly(1L, 2L, 3L).inOrder()
+        }
+
+    @Test
+    fun `export query returns the messages of several connections in order`() =
+        runBlocking {
+            val first = insertConnection()
+            val second = insertConnection()
+            val http = transactionDao.insert(createRequest("http"))!!
+            messageDao.insertAll(listOf(message(second, 2), message(first, 1), message(second, 1)))
+
+            val repository = WebSocketMessageDatabaseRepository(db)
+            val transactions = transactionDao.getSelectedTransactions(listOf(first, second, http))
+            val byConnection = repository.getMessagesForExport(transactions)
+
+            assertThat(byConnection.keys).containsExactly(first, second)
+            assertThat(byConnection.getValue(second).map { it.seq }).containsExactly(1L, 2L).inOrder()
         }
 
     @Test
