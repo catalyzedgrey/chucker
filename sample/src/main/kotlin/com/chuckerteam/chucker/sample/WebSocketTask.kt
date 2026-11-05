@@ -7,7 +7,6 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
-import okio.ByteString.Companion.encodeUtf8
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -43,7 +42,6 @@ class WebSocketTask(
         ) {
             webSocket.send("Hello from Chucker")
             webSocket.send("""{"event":"chat","data":{"user":"chucker","text":"JSON payloads are pretty-printed"}}""")
-            webSocket.send("binary payload".encodeUtf8())
         }
 
         override fun onMessage(
@@ -68,7 +66,8 @@ class WebSocketTask(
     }
 
     private companion object {
-        const val MESSAGES_SENT = 3
+        // Text only: Postman's echo server drops the connection when it receives a binary frame.
+        const val MESSAGES_SENT = 2
         const val NORMAL_CLOSURE = 1000
     }
 }
