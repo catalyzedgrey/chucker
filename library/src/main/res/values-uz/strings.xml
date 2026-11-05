@@ -89,4 +89,8 @@
     <string name="chucker_websocket_close">Yopish %1$d</string>
     <string name="chucker_websocket_failure">Xato</string>
     <string name="chucker_websocket_messages_dropped">Yozib olinmagan xabarlar: %1$d</string>
+    <string name="chucker_websocket_filter_sent">Yuborilgan</string>
+    <string name="chucker_websocket_filter_received">Qabul qilingan</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">Mos xabarlar yo‘q</string>
 </resources>

@@ -89,4 +89,8 @@
     <string name="chucker_websocket_close">बंद %1$d</string>
     <string name="chucker_websocket_failure">विफलता</string>
     <string name="chucker_websocket_messages_dropped">रिकॉर्ड न किए गए संदेश: %1$d</string>
+    <string name="chucker_websocket_filter_sent">भेजे गए</string>
+    <string name="chucker_websocket_filter_received">प्राप्त</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">कोई मेल खाता संदेश नहीं</string>
 </resources>

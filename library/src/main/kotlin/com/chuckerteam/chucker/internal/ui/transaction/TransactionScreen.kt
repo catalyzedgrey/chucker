@@ -142,7 +142,9 @@ internal fun TransactionScreen(
             PAGE_REQUEST -> doesRequestBodyRequireEncoding
             else -> false
         }
-    val showSearchIcon = payloadType != null && PayloadRules.shouldShowSearchIcon(payloadType, transaction)
+    val showSearchIcon =
+        currentPage == PAGE_MESSAGES ||
+            (payloadType != null && PayloadRules.shouldShowSearchIcon(payloadType, transaction))
     val showSaveIcon = payloadType != null && PayloadRules.shouldShowSaveIcon(payloadType, transaction)
 
     val tabTitles =
@@ -218,7 +220,11 @@ internal fun TransactionScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 when (page) {
                     PAGE_OVERVIEW -> TransactionOverviewScreen(viewModel)
-                    PAGE_MESSAGES -> WebSocketMessagesScreen(viewModel)
+                    PAGE_MESSAGES ->
+                        WebSocketMessagesScreen(
+                            viewModel = viewModel,
+                            searchQuery = if (page == currentPage) searchQuery else "",
+                        )
                     else ->
                         TransactionPayloadScreen(
                             viewModel = viewModel,

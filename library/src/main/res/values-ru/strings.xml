@@ -89,4 +89,8 @@
     <string name="chucker_websocket_close">Закрытие %1$d</string>
     <string name="chucker_websocket_failure">Ошибка</string>
     <string name="chucker_websocket_messages_dropped">Не записано сообщений: %1$d</string>
+    <string name="chucker_websocket_filter_sent">Отправленные</string>
+    <string name="chucker_websocket_filter_received">Полученные</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">Нет подходящих сообщений</string>
 </resources>

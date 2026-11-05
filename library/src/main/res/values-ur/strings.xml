@@ -89,4 +89,8 @@
     <string name="chucker_websocket_close">بند %1$d</string>
     <string name="chucker_websocket_failure">ناکامی</string>
     <string name="chucker_websocket_messages_dropped">ریکارڈ نہ ہونے والے پیغامات: %1$d</string>
+    <string name="chucker_websocket_filter_sent">بھیجے گئے</string>
+    <string name="chucker_websocket_filter_received">موصول</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">کوئی مماثل پیغام نہیں</string>
 </resources>
