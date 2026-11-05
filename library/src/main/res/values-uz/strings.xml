@@ -94,4 +94,5 @@
     <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
     <string name="chucker_websocket_no_matches">Mos xabarlar yo‘q</string>
     <string name="chucker_websocket_attachment">%3$s ilovasi %1$d/%2$d</string>
+    <string name="chucker_format_json">JSON’ni formatlash</string>
 </resources>

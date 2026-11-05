@@ -23,12 +23,22 @@ internal data class WebSocketMessageItem(
         val parentLabel: String,
     )
 
+    /** Whether [displayPayload] is JSON that "Format JSON" can pretty-print. */
+    val isJson: Boolean
+        get() = message.type == Type.TEXT && looksLikeJson(displayPayload)
+
     /** What the row shows: the decoded data for Socket.IO frames, the raw payload otherwise. */
     val displayPayload: String
         get() {
             val payload = message.payload.orEmpty()
             return frame?.data(payload) ?: payload
         }
+}
+
+/** Cheap check before pretty-printing: an object or array, ignoring leading whitespace. */
+internal fun looksLikeJson(text: String): Boolean {
+    val trimmed = text.trimStart()
+    return trimmed.startsWith("{") || trimmed.startsWith("[")
 }
 
 internal data class WebSocketMessageFilter(

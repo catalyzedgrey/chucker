@@ -103,6 +103,21 @@ internal class WebSocketMessageFilterTest {
     }
 
     @Test
+    fun `detects JSON in decoded Socket IO data and raw payloads`() {
+        val items =
+            listOf(
+                message(1, Direction.SENT, """42["chat",{"text":"hi"}]"""),
+                message(2, Direction.SENT, """42["typing"]"""),
+                message(3, Direction.SENT, "  {\"plain\":true}"),
+                message(4, Direction.SENT, "hello"),
+                message(5, Direction.SENT, "7b7d", Type.BINARY),
+            ).toMessageItems(isEngineIo = true)
+
+        // The event without arguments has no data left to format; binary is never JSON.
+        assertThat(items.map { it.isJson }).containsExactly(true, false, true, false, false).inOrder()
+    }
+
+    @Test
     fun `shows event arguments without the event name`() {
         assertThat(socketIo.first().displayPayload).isEqualTo("""[{"text":"hi"}]""")
     }
