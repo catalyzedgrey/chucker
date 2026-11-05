@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.map
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
+import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.repository.RepositoryProvider
 import com.chuckerteam.chucker.internal.support.combineLatest
 
@@ -49,6 +50,11 @@ internal class TransactionViewModel(
             }
 
     val transaction: LiveData<HttpTransaction?> = RepositoryProvider.transaction().getTransaction(transactionId)
+
+    /** Messages of a WebSocket connection. Lazy, so plain HTTP transactions never query them. */
+    val webSocketMessages: LiveData<List<WebSocketMessage>> by lazy {
+        RepositoryProvider.webSocketMessages().getMessages(transactionId)
+    }
 
     val formatRequestBody: LiveData<Boolean> =
         doesRequestBodyRequireEncoding

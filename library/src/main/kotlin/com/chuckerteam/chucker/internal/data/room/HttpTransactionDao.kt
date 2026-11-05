@@ -9,20 +9,27 @@ import androidx.room.Update
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.data.entity.HttpTransactionTuple
 
+private const val MESSAGE_COUNT =
+    "(SELECT COUNT(*) FROM ws_messages WHERE ws_messages.transactionId = transactions.id " +
+        "AND ws_messages.type IN ('TEXT', 'BINARY') AND ws_messages.direction = "
+
+private const val TUPLE_SELECT =
+    "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
+        "requestPayloadSize, responsePayloadSize, error, graphQLDetected, graphQlOperationName, isWebSocket, " +
+        MESSAGE_COUNT + "'SENT') AS sentCount, " +
+        MESSAGE_COUNT + "'RECEIVED') AS receivedCount " +
+        "FROM transactions "
+
 @Suppress("TooManyFunctions")
 @Dao
 internal interface HttpTransactionDao {
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
-            "requestPayloadSize, responsePayloadSize, error, graphQLDetected, graphQlOperationName FROM " +
-            "transactions ORDER BY requestDate DESC",
+        TUPLE_SELECT + "ORDER BY requestDate DESC",
     )
     fun getSortedTuples(): LiveData<List<HttpTransactionTuple>>
 
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
-            "requestPayloadSize, responsePayloadSize, error, graphQLDetected, graphQlOperationName FROM " +
-            "transactions WHERE responseCode LIKE :codeQuery AND (path LIKE :pathQuery OR " +
+        TUPLE_SELECT + "WHERE responseCode LIKE :codeQuery AND (path LIKE :pathQuery OR " +
             "graphQlOperationName LIKE :graphQlQuery) ORDER BY requestDate DESC",
     )
     fun getFilteredTuples(

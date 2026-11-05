@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 private const val PAGE_OVERVIEW = 0
 private const val PAGE_REQUEST = 1
 private const val PAGE_RESPONSE = 2
+private const val PAGE_MESSAGES = 3
 private const val UNSELECTED_TAB_ALPHA = 0.7f
 
 private fun payloadTypeForPage(page: Int): PayloadType? =
@@ -77,7 +78,10 @@ internal fun TransactionScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState(initialPage = initialPage) { PAGE_RESPONSE + 1 }
+    val transaction by viewModel.transaction.observeAsState()
+    val isWebSocket = transaction?.isWebSocket == true
+    val pagerState =
+        rememberPagerState(initialPage = initialPage) { if (isWebSocket) PAGE_MESSAGES + 1 else PAGE_RESPONSE + 1 }
     val currentPage = pagerState.currentPage
     val currentPageState = rememberUpdatedState(currentPage)
     val onPageChangedState = rememberUpdatedState(onPageChanged)
@@ -86,7 +90,6 @@ internal fun TransactionScreen(
     }
 
     val title by viewModel.transactionTitle.observeAsState()
-    val transaction by viewModel.transaction.observeAsState()
     val encodeUrl by viewModel.encodeUrl.observeAsState(false)
     val doesUrlRequireEncoding by viewModel.doesUrlRequireEncoding.observeAsState(false)
     val doesRequestBodyRequireEncoding by viewModel.doesRequestBodyRequireEncoding.observeAsState(false)
@@ -143,10 +146,11 @@ internal fun TransactionScreen(
     val showSaveIcon = payloadType != null && PayloadRules.shouldShowSaveIcon(payloadType, transaction)
 
     val tabTitles =
-        listOf(
+        listOfNotNull(
             stringResource(R.string.chucker_overview),
             stringResource(R.string.chucker_request),
             stringResource(R.string.chucker_response),
+            if (isWebSocket) stringResource(R.string.chucker_messages) else null,
         )
 
     Scaffold(
@@ -214,6 +218,7 @@ internal fun TransactionScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 when (page) {
                     PAGE_OVERVIEW -> TransactionOverviewScreen(viewModel)
+                    PAGE_MESSAGES -> WebSocketMessagesScreen(viewModel)
                     else ->
                         TransactionPayloadScreen(
                             viewModel = viewModel,

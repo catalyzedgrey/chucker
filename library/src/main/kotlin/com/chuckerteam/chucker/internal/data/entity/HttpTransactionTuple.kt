@@ -25,8 +25,14 @@ internal data class HttpTransactionTuple(
     @ColumnInfo(name = "error") var error: String?,
     @ColumnInfo(name = "graphQlDetected") var graphQlDetected: Boolean = false,
     @ColumnInfo(name = "graphQlOperationName") var graphQlOperationName: String?,
+    @ColumnInfo(name = "isWebSocket") var isWebSocket: Boolean = false,
+    @ColumnInfo(name = "sentCount") var sentCount: Int = 0,
+    @ColumnInfo(name = "receivedCount") var receivedCount: Int = 0,
 ) {
     val isSsl: Boolean get() = scheme.equals("https", ignoreCase = true)
+
+    /** A WebSocket connection whose handshake succeeded and which has not closed or failed yet. */
+    val isWebSocketOpen: Boolean get() = isWebSocket && error == null && responseCode != null && tookMs == null
 
     val status: HttpTransaction.Status
         get() =

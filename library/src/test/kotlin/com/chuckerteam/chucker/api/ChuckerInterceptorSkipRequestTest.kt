@@ -1,6 +1,7 @@
 package com.chuckerteam.chucker.api
 
 import com.chuckerteam.chucker.internal.support.addNonBlankPathSegments
+import com.chuckerteam.chucker.internal.websocket.ChuckerWebSocketTag
 import com.chuckerteam.chucker.util.ChuckerInterceptorDelegate
 import com.chuckerteam.chucker.util.ClientFactory
 import com.chuckerteam.chucker.util.NoLoggerRule
@@ -371,6 +372,7 @@ internal class ChuckerInterceptorSkipRequestTest {
                 every { headers } returns Headers.Builder().build()
                 every { method } returns "GET"
                 every { body } returns null
+                every { tag(ChuckerWebSocketTag::class.java) } returns null
             }
         every { proceed(any<Request>()) } returns
             mockk(relaxed = true) {

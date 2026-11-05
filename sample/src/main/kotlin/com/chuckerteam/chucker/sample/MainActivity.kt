@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
             DummyImageHttpTask(client),
             PostmanEchoHttpTask(client),
             CronetHttpTask(applicationContext, client),
+            WebSocketTask(applicationContext, client),
         )
     }
 

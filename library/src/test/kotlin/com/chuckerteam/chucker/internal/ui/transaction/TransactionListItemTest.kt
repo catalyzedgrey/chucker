@@ -37,6 +37,24 @@ internal class TransactionListItemTest {
     }
 
     @Test
+    fun rendersOpenWebSocketWithMessageCounts() {
+        setItem(createTuple(responseCode = 101).copy(isWebSocket = true, sentCount = 2, receivedCount = 3))
+
+        composeRule.onNodeWithText("WS").assertExists()
+        composeRule.onNodeWithText("/some/path").assertExists()
+        composeRule.onNodeWithText("Open").assertExists()
+        composeRule.onNodeWithText("↑2 ↓3").assertExists()
+    }
+
+    @Test
+    fun rendersClosedWebSocketWithDuration() {
+        setItem(createTuple(responseCode = 101, tookMs = 1500).copy(isWebSocket = true))
+
+        composeRule.onNodeWithText("Open").assertDoesNotExist()
+        composeRule.onNodeWithText("1500 ms").assertExists()
+    }
+
+    @Test
     fun clickInvokesOnClick() {
         var clicks = 0
         setItem(createTuple(responseCode = 200), onClick = { clicks++ })

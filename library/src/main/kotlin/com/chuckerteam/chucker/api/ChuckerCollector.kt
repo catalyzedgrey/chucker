@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
+import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.har.log.Creator
 import com.chuckerteam.chucker.internal.data.repository.RepositoryProvider
 import com.chuckerteam.chucker.internal.support.HarUtils
@@ -12,6 +13,7 @@ import com.chuckerteam.chucker.internal.support.NotificationHelper
 import com.chuckerteam.chucker.internal.support.TransactionDetailsHarSharable
 import com.chuckerteam.chucker.internal.support.TransactionListDetailsSharable
 import com.chuckerteam.chucker.internal.support.writeToFile
+import com.chuckerteam.chucker.internal.websocket.WebSocketStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -77,6 +79,39 @@ public class ChuckerCollector
                 if (showNotification && updated > 0) {
                     notificationHelper.show(transaction)
                 }
+            }
+        }
+
+        /** Persists WebSocket connections and messages recorded by [ChuckerWebSocketFactory]. */
+        internal val webSocketStore: WebSocketStore =
+            object : WebSocketStore {
+                override suspend fun insertConnection(transaction: HttpTransaction) {
+                    RepositoryProvider.transaction().insertTransaction(transaction)
+                    notifyWebSocket(transaction)
+                    retentionManager.doMaintenance()
+                }
+
+                override suspend fun updateConnection(transaction: HttpTransaction) {
+                    if (RepositoryProvider.transaction().updateTransaction(transaction) > 0) {
+                        notifyWebSocket(transaction)
+                    }
+                }
+
+                override suspend fun insertMessages(messages: List<WebSocketMessage>) {
+                    RepositoryProvider.webSocketMessages().insertMessages(messages)
+                }
+
+                override suspend fun trimMessages(
+                    transactionId: Long,
+                    keep: Int,
+                ) {
+                    RepositoryProvider.webSocketMessages().trimMessages(transactionId, keep)
+                }
+            }
+
+        private suspend fun notifyWebSocket(transaction: HttpTransaction) {
+            if (showNotification) {
+                withContext(Dispatchers.Main) { notificationHelper.show(transaction) }
             }
         }
 

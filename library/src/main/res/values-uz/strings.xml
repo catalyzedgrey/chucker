@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">Formatlash bilan nusxalash</string>
     <string name="chucker_request_copied_formatted">So‘rov formatlangan holda nusxalandi</string>
     <string name="chucker_response_copied_formatted">Javob formatlangan holda nusxalandi</string>
+    <string name="chucker_messages">Xabarlar</string>
+    <string name="chucker_websocket_open">Ochiq</string>
+    <string name="chucker_websocket_no_messages">Hozircha xabarlar yo‘q</string>
+    <string name="chucker_websocket_not_sent">Yuborilmadi</string>
+    <string name="chucker_websocket_binary">Ikkilik, %1$s</string>
+    <string name="chucker_websocket_close">Yopish %1$d</string>
+    <string name="chucker_websocket_failure">Xato</string>
+    <string name="chucker_websocket_messages_dropped">Yozib olinmagan xabarlar: %1$d</string>
 </resources>

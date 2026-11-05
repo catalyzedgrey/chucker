@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">Copiar Con Formato</string>
     <string name="chucker_request_copied_formatted">Solicitud Con Formato Copiada</string>
     <string name="chucker_response_copied_formatted">Respuesta Con Formato Copiada</string>
+    <string name="chucker_messages">Mensajes</string>
+    <string name="chucker_websocket_open">Abierta</string>
+    <string name="chucker_websocket_no_messages">Aún no hay mensajes</string>
+    <string name="chucker_websocket_not_sent">No enviado</string>
+    <string name="chucker_websocket_binary">Binario, %1$s</string>
+    <string name="chucker_websocket_close">Cierre %1$d</string>
+    <string name="chucker_websocket_failure">Error</string>
+    <string name="chucker_websocket_messages_dropped">Mensajes no registrados: %1$d</string>
 </resources>

@@ -5,6 +5,14 @@ Please add your entries according to this format.
 
 ## Unreleased
 
+### Added
+
+-   `ChuckerWebSocketFactory` records WebSocket connections and their messages, including Socket.IO over WebSocket. Connections appear in the list as `WS` rows with message counts, with a Messages tab in their details. Available in the no-op artifact too
+
+### Changed
+
+-   Database version bumped to 12. As with previous schema changes, data recorded by an older version is cleared on upgrade
+
 ## Chucker Compose 1.0.0 _(2026-11-04)_
 
 First release of the Compose fork, published as `io.github.catalyzedgrey:chucker-compose` and `io.github.catalyzedgrey:chucker-compose-no-op`. It's based on upstream Chucker after 4.3.1, so it includes upstream's unreleased changes listed below. The Kotlin packages are unchanged, so it's a drop-in replacement for `com.github.chuckerteam.chucker:library`.

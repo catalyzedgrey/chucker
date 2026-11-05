@@ -11,10 +11,16 @@ import com.chuckerteam.chucker.internal.data.room.ChuckerDatabase
  */
 internal object RepositoryProvider {
     private var transactionRepository: HttpTransactionRepository? = null
+    private var webSocketMessageRepository: WebSocketMessageRepository? = null
 
     fun transaction(): HttpTransactionRepository =
         checkNotNull(transactionRepository) {
             "You can't access the transaction repository if you don't initialize it!"
+        }
+
+    fun webSocketMessages(): WebSocketMessageRepository =
+        checkNotNull(webSocketMessageRepository) {
+            "You can't access the WebSocket message repository if you don't initialize it!"
         }
 
     /**
@@ -24,6 +30,7 @@ internal object RepositoryProvider {
         if (transactionRepository == null) {
             val db = ChuckerDatabase.create(applicationContext)
             transactionRepository = HttpTransactionDatabaseRepository(db)
+            webSocketMessageRepository = WebSocketMessageDatabaseRepository(db)
         }
     }
 
@@ -33,5 +40,6 @@ internal object RepositoryProvider {
     @VisibleForTesting
     fun close() {
         transactionRepository = null
+        webSocketMessageRepository = null
     }
 }
