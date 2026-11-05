@@ -30,6 +30,17 @@ import kotlinx.coroutines.withContext
 private val interceptorTypeSelector = InterceptorTypeSelector()
 private const val OWN_PACKAGE = "com.chuckerteam.chucker"
 
+/**
+ * Framework methods that some OEM builds add, and that read from disk on the main thread whenever
+ * any app calls them: Samsung-style `IdsController` while resuming an activity, and
+ * `PackageManager.isSpeg` from inside `Toast.show()`.
+ */
+private val OEM_DISK_READERS =
+    setOf(
+        "android.app.IdsController.openIdsWindow",
+        "android.content.pm.PackageManager.isSpeg",
+    )
+
 class MainActivity : ComponentActivity() {
     private val client by lazy {
         createOkHttpClient(applicationContext, interceptorTypeSelector)
@@ -104,15 +115,19 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Crashes on violations caused by Chucker or the sample, but only logs the ones raised
-     * entirely inside the platform. Some OEM builds read from disk on the main thread while
-     * resuming any activity, which would otherwise crash the sample for reasons outside our code.
+     * Crashes on violations caused by Chucker or the sample, and only logs the rest: violations
+     * raised entirely inside the platform, and disk reads that OEM framework code does inside
+     * ordinary calls such as `Toast.show()` (see [OEM_DISK_READERS]).
      */
     private fun StrictMode.ThreadPolicy.Builder.crashOnOwnViolations(): StrictMode.ThreadPolicy.Builder =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             penaltyListener(mainExecutor) { violation ->
-                val causedByUs = violation.stackTrace.any { it.className.startsWith(OWN_PACKAGE) }
-                if (causedByUs) throw IllegalStateException("StrictMode ThreadPolicy violation", violation)
+                val frames = violation.stackTrace
+                val causedByUs = frames.any { it.className.startsWith(OWN_PACKAGE) }
+                val causedByOem = frames.any { "${it.className}.${it.methodName}" in OEM_DISK_READERS }
+                if (causedByUs && !causedByOem) {
+                    throw IllegalStateException("StrictMode ThreadPolicy violation", violation)
+                }
             }
         } else {
             penaltyDeath()
