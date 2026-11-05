@@ -31,7 +31,7 @@ internal class ChuckerInterceptorDelegate(
     private val mockContext =
         mockk<Context> {
             every { getString(R.string.chucker_body_content_truncated) } returns "\n\n--- Content truncated ---"
-        }
+        }.also { context -> every { context.applicationContext } returns context }
     private val mockCollector =
         mockk<ChuckerCollector> {
             every { onRequestSent(any()) } returns Unit

@@ -28,8 +28,11 @@ public class RetentionManager
 
         // How often the cleanup should happen
         private val cleanupFrequency: Long
+
+        // The lazy initializer outlives the constructor, so it must not capture an Activity.
+        private val applicationContext = context.applicationContext
         private val prefs: SharedPreferences by lazy {
-            context.getSharedPreferences(PREFS_NAME, 0)
+            applicationContext.getSharedPreferences(PREFS_NAME, 0)
         }
         private val maintenanceMutex = Mutex()
 
