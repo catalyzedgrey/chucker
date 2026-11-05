@@ -89,4 +89,8 @@
     <string name="chucker_websocket_close">Жабу %1$d</string>
     <string name="chucker_websocket_failure">Қате</string>
     <string name="chucker_websocket_messages_dropped">Жазылмаған хабарлар: %1$d</string>
+    <string name="chucker_websocket_filter_sent">Жіберілген</string>
+    <string name="chucker_websocket_filter_received">Алынған</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">Сәйкес хабарлар жоқ</string>
 </resources>

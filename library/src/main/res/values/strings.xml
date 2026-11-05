@@ -90,4 +90,8 @@
     <string name="chucker_websocket_close">Close %1$d</string>
     <string name="chucker_websocket_failure">Failure</string>
     <string name="chucker_websocket_messages_dropped">Messages not recorded: %1$d</string>
+    <string name="chucker_websocket_filter_sent">Sent</string>
+    <string name="chucker_websocket_filter_received">Received</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">No matching messages</string>
 </resources>

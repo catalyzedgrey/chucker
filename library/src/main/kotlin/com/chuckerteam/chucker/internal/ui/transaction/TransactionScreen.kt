@@ -16,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -42,10 +43,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.internal.support.FileSaver
 import com.chuckerteam.chucker.internal.support.Logger
+import com.chuckerteam.chucker.internal.ui.compose.ChuckerTheme
 import com.chuckerteam.chucker.internal.ui.compose.chuckerAppBarContainerColor
 import com.chuckerteam.chucker.internal.ui.compose.chuckerTopAppBarColors
 import kotlinx.coroutines.launch
@@ -55,6 +59,9 @@ private const val PAGE_REQUEST = 1
 private const val PAGE_RESPONSE = 2
 private const val PAGE_MESSAGES = 3
 private const val UNSELECTED_TAB_ALPHA = 0.7f
+
+/** More tabs than this don't fit at fixed width on a phone, so the row scrolls instead. */
+private const val MAX_FIXED_TABS = 3
 
 private fun payloadTypeForPage(page: Int): PayloadType? =
     when (page) {
@@ -142,7 +149,9 @@ internal fun TransactionScreen(
             PAGE_REQUEST -> doesRequestBodyRequireEncoding
             else -> false
         }
-    val showSearchIcon = payloadType != null && PayloadRules.shouldShowSearchIcon(payloadType, transaction)
+    val showSearchIcon =
+        currentPage == PAGE_MESSAGES ||
+            (payloadType != null && PayloadRules.shouldShowSearchIcon(payloadType, transaction))
     val showSaveIcon = payloadType != null && PayloadRules.shouldShowSaveIcon(payloadType, transaction)
 
     val tabTitles =
@@ -193,21 +202,11 @@ internal fun TransactionScreen(
                     onShareFile = onShareFile,
                     onShareHar = onShareHar,
                 )
-                PrimaryTabRow(
-                    selectedTabIndex = currentPage,
-                    containerColor = chuckerAppBarContainerColor(),
-                    contentColor = Color.White,
-                ) {
-                    tabTitles.forEachIndexed { index, tabTitle ->
-                        Tab(
-                            selected = currentPage == index,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                            text = { Text(tabTitle.uppercase()) },
-                            selectedContentColor = Color.White,
-                            unselectedContentColor = Color.White.copy(alpha = UNSELECTED_TAB_ALPHA),
-                        )
-                    }
-                }
+                TransactionTabs(
+                    titles = tabTitles,
+                    selectedIndex = currentPage,
+                    onTabClick = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
+                )
             }
         },
     ) { innerPadding ->
@@ -218,7 +217,11 @@ internal fun TransactionScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 when (page) {
                     PAGE_OVERVIEW -> TransactionOverviewScreen(viewModel)
-                    PAGE_MESSAGES -> WebSocketMessagesScreen(viewModel)
+                    PAGE_MESSAGES ->
+                        WebSocketMessagesScreen(
+                            viewModel = viewModel,
+                            searchQuery = if (page == currentPage) searchQuery else "",
+                        )
                     else ->
                         TransactionPayloadScreen(
                             viewModel = viewModel,
@@ -348,4 +351,63 @@ private fun ShareMenuItem(
             action()
         },
     )
+}
+
+/**
+ * The transaction's tabs. Three tabs share the width; WebSocket connections add a fourth, which
+ * doesn't fit on phones (labels wrapped onto two lines), so the row scrolls instead.
+ */
+@Composable
+private fun TransactionTabs(
+    titles: List<String>,
+    selectedIndex: Int,
+    onTabClick: (Int) -> Unit,
+) {
+    val tabs: @Composable () -> Unit = {
+        titles.forEachIndexed { index, title ->
+            Tab(
+                selected = selectedIndex == index,
+                onClick = { onTabClick(index) },
+                text = { Text(title.uppercase(), maxLines = 1, softWrap = false) },
+                selectedContentColor = Color.White,
+                unselectedContentColor = Color.White.copy(alpha = UNSELECTED_TAB_ALPHA),
+            )
+        }
+    }
+    if (titles.size > MAX_FIXED_TABS) {
+        PrimaryScrollableTabRow(
+            selectedTabIndex = selectedIndex,
+            containerColor = chuckerAppBarContainerColor(),
+            contentColor = Color.White,
+            edgePadding = 0.dp,
+            tabs = tabs,
+        )
+    } else {
+        PrimaryTabRow(
+            selectedTabIndex = selectedIndex,
+            containerColor = chuckerAppBarContainerColor(),
+            contentColor = Color.White,
+            tabs = tabs,
+        )
+    }
+}
+
+@Preview(name = "HTTP tabs", widthDp = 360)
+@Composable
+private fun TransactionTabsHttpPreview() {
+    ChuckerTheme {
+        TransactionTabs(titles = listOf("Overview", "Request", "Response"), selectedIndex = 0, onTabClick = {})
+    }
+}
+
+@Preview(name = "WebSocket tabs", widthDp = 360)
+@Composable
+private fun TransactionTabsWebSocketPreview() {
+    ChuckerTheme {
+        TransactionTabs(
+            titles = listOf("Overview", "Request", "Response", "Messages"),
+            selectedIndex = 3,
+            onTabClick = {},
+        )
+    }
 }

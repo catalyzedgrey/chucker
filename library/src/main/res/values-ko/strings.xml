@@ -89,4 +89,8 @@
     <string name="chucker_websocket_close">닫힘 %1$d</string>
     <string name="chucker_websocket_failure">실패</string>
     <string name="chucker_websocket_messages_dropped">기록되지 않은 메시지: %1$d</string>
+    <string name="chucker_websocket_filter_sent">보냄</string>
+    <string name="chucker_websocket_filter_received">받음</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">일치하는 메시지가 없습니다</string>
 </resources>

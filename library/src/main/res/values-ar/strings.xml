@@ -89,4 +89,8 @@
     <string name="chucker_websocket_close">إغلاق %1$d</string>
     <string name="chucker_websocket_failure">فشل</string>
     <string name="chucker_websocket_messages_dropped">رسائل لم تُسجّل: %1$d</string>
+    <string name="chucker_websocket_filter_sent">المُرسلة</string>
+    <string name="chucker_websocket_filter_received">المُستلمة</string>
+    <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
+    <string name="chucker_websocket_no_matches">لا توجد رسائل مطابقة</string>
 </resources>

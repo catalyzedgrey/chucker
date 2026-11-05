@@ -7,6 +7,8 @@ Please add your entries according to this format.
 
 ### Added
 
+-   Socket.IO decoding in the WebSocket Messages tab: packet type, namespace, ack id and event name for each frame, with the event's arguments shown as JSON. Works with Engine.IO 3 and 4, detected from the `EIO` query parameter
+-   Messages tab filters (sent, received, Engine.IO ping/pong) and search over payloads and event names
 -   `ChuckerWebSocketFactory` records WebSocket connections and their messages, including Socket.IO over WebSocket. Connections appear in the list as `WS` rows with message counts, with a Messages tab in their details. Available in the no-op artifact too
 
 ### Changed

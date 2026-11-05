@@ -128,6 +128,10 @@ dependencies {
     implementation(libs.apollo.runtime)
 
     implementation(libs.cronet.okhttp)
+    implementation(libs.socket.io.client) {
+        // Android ships its own org.json.
+        exclude(group = "org.json", module = "json")
+    }
     implementation(libs.play.services.cronet)
     implementation(libs.kotlinx.coroutines.play.services)
 

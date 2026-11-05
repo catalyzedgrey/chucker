@@ -174,6 +174,8 @@ webSocketFactory.newWebSocket(request, listener)
 
 Each connection shows up in the list as a `WS` row with sent/received message counts, and its detail screen gets a **Messages** tab. Handshakes opened through the factory are skipped by `ChuckerInterceptor`, so they aren't listed twice.
 
+The **Messages** tab can filter by direction and search payloads. For Socket.IO connections (detected by the `EIO` query parameter that every Engine.IO client sends) it also decodes each frame: rows show the packet and event, such as `EVENT chat` or `ACK #7`, with the event's arguments as JSON. Engine.IO ping/pong frames are hidden by default.
+
 For Socket.IO, set both factories on the options. If you don't, Socket.IO creates its own client and Chucker sees nothing:
 
 ```kotlin
