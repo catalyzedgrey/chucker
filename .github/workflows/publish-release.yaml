@@ -1,29 +1,35 @@
 name: Publish Release
-on: 
+on:
   push:
     tags:
-      - '*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
   publish:
-    if: ${{ github.repository == 'ChuckerTeam/chucker'}}
-    runs-on: [ubuntu-latest]
+    if: ${{ github.repository == 'catalyzedgrey/chucker' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed to create the GitHub release
 
     steps:
     - name: Checkout Repo
       uses: actions/checkout@v6
 
+    - name: Resolve version from tag
+      run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
     - name: Setup Java
       uses: actions/setup-java@v5
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '21'
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v6
 
     - name: Publish to Maven Local
-      run: ./gradlew publishToMavenLocal
+      run: ./gradlew publishToMavenLocal -PVERSION_NAME=$VERSION
       env:
         ORG_GRADLE_PROJECT_SIGNING_KEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_KEY }}
         ORG_GRADLE_PROJECT_SIGNING_PWD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_PWD }}
@@ -34,10 +40,22 @@ jobs:
         name: 'chucker-release-artifacts'
         path: '~/.m2/repository/'
 
-    - name: Publish to the Staging Repository
-      run: ./gradlew publishToSonatype closeStagingRepositories --no-parallel
+    - name: Publish to Maven Central
+      run: ./gradlew publishToSonatype closeAndReleaseStagingRepositories --no-parallel -PVERSION_NAME=$VERSION
       env:
         ORG_GRADLE_PROJECT_SIGNING_KEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_KEY }}
         ORG_GRADLE_PROJECT_SIGNING_PWD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_PWD }}
         ORG_GRADLE_PROJECT_NEXUS_USERNAME: ${{ secrets.ORG_GRADLE_PROJECT_NEXUS_USERNAME }}
         ORG_GRADLE_PROJECT_NEXUS_PASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_NEXUS_PASSWORD }}
+
+    - name: Create GitHub Release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        prerelease=""
+        if [[ "$VERSION" == *-* ]]; then prerelease="--prerelease"; fi
+        gh release create "$GITHUB_REF_NAME" \
+          --title "$GITHUB_REF_NAME" \
+          --generate-notes \
+          --verify-tag \
+          $prerelease
