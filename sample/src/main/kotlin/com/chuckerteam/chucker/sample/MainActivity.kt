@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
             PostmanEchoHttpTask(client),
             CronetHttpTask(applicationContext, client),
             WebSocketTask(applicationContext, client),
+            SocketIoTask(applicationContext, client),
         )
     }
 
