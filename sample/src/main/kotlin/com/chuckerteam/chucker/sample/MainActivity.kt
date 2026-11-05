@@ -2,6 +2,7 @@ package com.chuckerteam.chucker.sample
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import android.util.Log
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private val interceptorTypeSelector = InterceptorTypeSelector()
+private const val OWN_PACKAGE = "com.chuckerteam.chucker"
 
 class MainActivity : ComponentActivity() {
     private val client by lazy {
@@ -95,10 +97,25 @@ class MainActivity : ComponentActivity() {
                 .detectDiskReads()
                 .detectDiskWrites()
                 .penaltyLog()
-                .penaltyDeath()
+                .crashOnOwnViolations()
                 .build(),
         )
     }
+
+    /**
+     * Crashes on violations caused by Chucker or the sample, but only logs the ones raised
+     * entirely inside the platform. Some OEM builds read from disk on the main thread while
+     * resuming any activity, which would otherwise crash the sample for reasons outside our code.
+     */
+    private fun StrictMode.ThreadPolicy.Builder.crashOnOwnViolations(): StrictMode.ThreadPolicy.Builder =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            penaltyListener(mainExecutor) { violation ->
+                val causedByUs = violation.stackTrace.any { it.className.startsWith(OWN_PACKAGE) }
+                if (causedByUs) throw IllegalStateException("StrictMode ThreadPolicy violation", violation)
+            }
+        } else {
+            penaltyDeath()
+        }
 
     private fun launchChuckerDirectly() {
         // Optionally launch Chucker directly from your own app UI
