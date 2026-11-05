@@ -41,12 +41,35 @@ internal class WebSocketMessagesContentTest {
     private fun setContent(
         url: String,
         query: String = "",
+        formatJson: Boolean = false,
     ) {
         composeRule.setContent {
             ChuckerTheme {
-                WebSocketMessagesContent(messages = messages, openedAt = 0, connectionUrl = url, searchQuery = query)
+                WebSocketMessagesContent(
+                    messages = messages,
+                    openedAt = 0,
+                    connectionUrl = url,
+                    searchQuery = query,
+                    formatJson = formatJson,
+                )
             }
         }
+    }
+
+    @Test
+    fun formatJsonPrettyPrintsJsonMessages() {
+        setContent("https://example.com/socket.io/?EIO=4", formatJson = true)
+
+        // Pretty-printed output puts a space after the colon; the compact payload has none.
+        composeRule.onNodeWithText("\"text\": \"hello\"", substring = true).assertExists()
+        composeRule.onNodeWithText("""[{"text":"hello"}]""").assertDoesNotExist()
+    }
+
+    @Test
+    fun jsonStaysCompactWithoutFormatJson() {
+        setContent("https://example.com/socket.io/?EIO=4", formatJson = false)
+
+        composeRule.onNodeWithText("""[{"text":"hello"}]""").assertExists()
     }
 
     @Test

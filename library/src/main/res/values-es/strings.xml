@@ -94,4 +94,5 @@
     <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
     <string name="chucker_websocket_no_matches">No hay mensajes que coincidan</string>
     <string name="chucker_websocket_attachment">Adjunto %1$d/%2$d de %3$s</string>
+    <string name="chucker_format_json">Formatear JSON</string>
 </resources>

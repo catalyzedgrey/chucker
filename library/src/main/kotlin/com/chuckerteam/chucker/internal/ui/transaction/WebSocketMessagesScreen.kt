@@ -56,11 +56,13 @@ private const val MILLIS_PER_SECOND = 1000.0
  * following once the user scrolls up.
  *
  * @param searchQuery Filters messages by payload or event name; blank shows everything.
+ * @param formatJson Expands and pretty-prints every JSON message. Rows can still be toggled one by one.
  */
 @Composable
 internal fun WebSocketMessagesScreen(
     viewModel: TransactionViewModel,
     searchQuery: String,
+    formatJson: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val messages by viewModel.webSocketMessages.observeAsState(emptyList())
@@ -70,6 +72,7 @@ internal fun WebSocketMessagesScreen(
         openedAt = transaction?.requestDate ?: messages.firstOrNull()?.timestamp ?: 0L,
         connectionUrl = transaction?.url,
         searchQuery = searchQuery,
+        formatJson = formatJson,
         modifier = modifier,
     )
 }
@@ -82,6 +85,7 @@ internal fun WebSocketMessagesContent(
     connectionUrl: String?,
     searchQuery: String,
     modifier: Modifier = Modifier,
+    formatJson: Boolean = false,
 ) {
     val isEngineIo = remember(connectionUrl) { SocketIoDecoder.isEngineIoUrl(connectionUrl) }
 
@@ -124,7 +128,7 @@ internal fun WebSocketMessagesContent(
         when {
             messages.isEmpty() -> EmptyMessage(R.string.chucker_websocket_no_messages)
             visible.isEmpty() -> EmptyMessage(R.string.chucker_websocket_no_matches)
-            else -> MessageList(visible, openedAt)
+            else -> MessageList(visible, openedAt, formatJson)
         }
     }
 }
@@ -140,6 +144,7 @@ private fun EmptyMessage(textRes: Int) {
 private fun MessageList(
     items: List<WebSocketMessageItem>,
     openedAt: Long,
+    formatJson: Boolean,
 ) {
     val listState = rememberLazyListState()
     val isAtBottom by remember {
@@ -160,7 +165,7 @@ private fun MessageList(
 
     LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
         items(items, key = { it.message.id }) { item ->
-            WebSocketMessageRow(item, openedAt)
+            WebSocketMessageRow(item, openedAt, formatJson)
             HorizontalDivider()
         }
     }
@@ -170,10 +175,14 @@ private fun MessageList(
 private fun WebSocketMessageRow(
     item: WebSocketMessageItem,
     openedAt: Long,
+    formatJson: Boolean,
     initiallyExpanded: Boolean = false,
 ) {
     val message = item.message
-    var expanded by rememberSaveable(message.id) { mutableStateOf(initiallyExpanded) }
+    // Keyed on formatJson, so switching it resets every row to the new default.
+    var expanded by rememberSaveable(message.id, formatJson) {
+        mutableStateOf(initiallyExpanded || (formatJson && item.isJson))
+    }
     val sent = message.direction == Direction.SENT
     val accent =
         when {
@@ -268,11 +277,7 @@ private fun WebSocketMessage.label(): String =
 private fun formatPayload(
     text: String,
     prettyPrint: Boolean,
-): String {
-    if (!prettyPrint) return text
-    val trimmed = text.trimStart()
-    return if (trimmed.startsWith("{") || trimmed.startsWith("[")) FormatUtils.formatJson(text) else text
-}
+): String = if (prettyPrint && looksLikeJson(text)) FormatUtils.formatJson(text) else text
 
 internal fun formatOffset(millis: Long): String = String.format(Locale.US, "+%.3fs", millis.coerceAtLeast(0) / MILLIS_PER_SECOND)
 
@@ -341,6 +346,20 @@ private fun WebSocketMessagesContentPlainPreview() {
     }
 }
 
+@Preview(name = "Format JSON on", showBackground = true)
+@Composable
+private fun WebSocketMessagesContentFormatJsonPreview() {
+    ChuckerTheme {
+        WebSocketMessagesContent(
+            messages = previewSocketIoMessages,
+            openedAt = PREVIEW_OPENED_AT,
+            connectionUrl = "https://example.com/socket.io/?EIO=4&transport=websocket",
+            searchQuery = "",
+            formatJson = true,
+        )
+    }
+}
+
 @Preview(name = "No messages", showBackground = true)
 @Composable
 private fun WebSocketMessagesContentEmptyPreview() {
@@ -393,6 +412,7 @@ private fun WebSocketMessageRowPreview() {
         WebSocketMessageRow(
             item = listOf(message).toMessageItems(isEngineIo = true).single(),
             openedAt = PREVIEW_OPENED_AT,
+            formatJson = false,
             initiallyExpanded = true,
         )
     }

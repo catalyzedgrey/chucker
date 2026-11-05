@@ -16,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
@@ -30,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -100,6 +102,9 @@ internal fun TransactionScreen(
     val encodeUrl by viewModel.encodeUrl.observeAsState(false)
     val doesUrlRequireEncoding by viewModel.doesUrlRequireEncoding.observeAsState(false)
     val doesRequestBodyRequireEncoding by viewModel.doesRequestBodyRequireEncoding.observeAsState(false)
+
+    // Messages tab: expand and pretty-print every JSON message.
+    var formatJson by rememberSaveable { mutableStateOf(false) }
 
     // The search state belongs to the page it was opened on; switching pages closes it.
     var searchOpen by remember(currentPage) { mutableStateOf(false) }
@@ -180,6 +185,9 @@ internal fun TransactionScreen(
                     showEncodeIcon = showEncodeIcon,
                     encodeUrl = encodeUrl,
                     onEncodeUrl = { viewModel.switchUrlEncoding() },
+                    showFormatJsonIcon = currentPage == PAGE_MESSAGES,
+                    formatJson = formatJson,
+                    onFormatJsonChange = { formatJson = it },
                     showSaveIcon = showSaveIcon,
                     onSave = {
                         val currentTransaction = viewModel.transaction.value
@@ -221,6 +229,7 @@ internal fun TransactionScreen(
                         WebSocketMessagesScreen(
                             viewModel = viewModel,
                             searchQuery = if (page == currentPage) searchQuery else "",
+                            formatJson = formatJson,
                         )
                     else ->
                         TransactionPayloadScreen(
@@ -249,6 +258,9 @@ private fun TransactionTopBar(
     showEncodeIcon: Boolean,
     encodeUrl: Boolean,
     onEncodeUrl: () -> Unit,
+    showFormatJsonIcon: Boolean,
+    formatJson: Boolean,
+    onFormatJsonChange: (Boolean) -> Unit,
     showSaveIcon: Boolean,
     onSave: () -> Unit,
     onShareText: () -> Unit,
@@ -297,6 +309,16 @@ private fun TransactionTopBar(
                     Icon(
                         painterResource(R.drawable.chucker_ic_search_white),
                         contentDescription = stringResource(R.string.chucker_search),
+                    )
+                }
+            }
+            if (showFormatJsonIcon) {
+                IconToggleButton(checked = formatJson, onCheckedChange = onFormatJsonChange) {
+                    Icon(
+                        painterResource(R.drawable.chucker_ic_format_json_white),
+                        contentDescription = stringResource(R.string.chucker_format_json),
+                        // Dimmed when off, like a light that's switched off.
+                        tint = if (formatJson) Color.White else Color.White.copy(alpha = UNSELECTED_TAB_ALPHA),
                     )
                 }
             }

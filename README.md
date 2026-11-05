@@ -77,6 +77,7 @@ Don't forget to check the [changelog](CHANGELOG.md) to have a look at all the ch
 * Support for body text search with **highlighting** 🕵️‍♂️
 * Support for showing **images** in HTTP Responses 🖼
 * Support for custom decoding of HTTP bodies
+* Support for **WebSockets** and **Socket.IO**, with decoded messages 🔌
 
 ### Multi-Window 🚪
 
@@ -172,13 +173,22 @@ val webSocketFactory = ChuckerWebSocketFactory.Builder(context, okHttpClient)
 webSocketFactory.newWebSocket(request, listener)
 ```
 
-Each connection shows up in the list as a `WS` row with sent/received message counts, and its detail screen gets a **Messages** tab. Handshakes opened through the factory are skipped by `ChuckerInterceptor`, so they aren't listed twice.
+Each connection shows up in the list as a `WS` row with its duration and sent/received message counts. Its detail screen gets a **Messages** tab: a timeline of every message, with the time since the connection opened. Handshakes opened through the factory are skipped by `ChuckerInterceptor`, so they aren't listed twice.
 
-The **Messages** tab can filter by direction and search payloads. For Socket.IO connections (detected by the `EIO` query parameter that every Engine.IO client sends) it also decodes each frame: rows show the packet and event, such as `EVENT chat` or `ACK #7`, with the event's arguments as JSON. Engine.IO ping/pong frames are hidden by default. Binary frames that carry a Socket.IO binary event's attachments are labelled with the event they belong to.
+<p align="center">
+  <img src="assets/websocket/websocket-list.png" alt="WebSocket connections in the transaction list" width="30%"/>
+  &nbsp;
+  <img src="assets/websocket/websocket-socketio-messages.png" alt="Decoded Socket.IO messages" width="30%"/>
+  &nbsp;
+  <img src="assets/websocket/websocket-format-json.png" alt="WebSocket messages with Format JSON on" width="30%"/>
+</p>
 
-Socket.IO's HTTP long-polling requests are captured by `ChuckerInterceptor` like any other request. Their bodies are shown as one decoded packet per line, while "Copy raw", cURL and HAR keep the original body.
+In the **Messages** tab you can:
 
-Text and HAR exports include each connection's messages. HAR files use Chrome DevTools' `_webSocketMessages` format, so the messages show up when you import the file into DevTools.
+* Filter by direction (**Sent**, **Received**) and search payloads and event names.
+* Tap a message to expand it, or turn on **Format JSON** (the `{ }` button) to expand and pretty-print every JSON message at once.
+
+#### Socket.IO
 
 For Socket.IO, set both factories on the options. If you don't, Socket.IO creates its own client and Chucker sees nothing:
 
@@ -188,6 +198,17 @@ val options = IO.Options().apply {
     callFactory = okHttpClient                  // Polling requests, recorded by ChuckerInterceptor
 }
 ```
+
+Socket.IO connections are detected by the `EIO` query parameter that every Engine.IO client sends, and each frame is decoded:
+
+* Rows show the packet and event, such as `EVENT chat`, `ACK #7` or `CONNECT /admin`, with the event's arguments as JSON.
+* Engine.IO ping/pong frames are hidden by default; the **Ping/pong** chip shows them.
+* Binary frames that carry a binary event's attachments are labelled with the event they belong to.
+* HTTP long-polling requests are captured by `ChuckerInterceptor` like any other request. Their bodies are shown as one decoded packet per line, while "Copy raw", cURL and HAR keep the original body.
+
+#### Exports
+
+Text and HAR exports include each connection's messages. HAR files use Chrome DevTools' `_webSocketMessages` format, so the messages show up when you import the file into DevTools.
 
 ### Notification Permission 🔔
 
