@@ -25,10 +25,13 @@ internal object RepositoryProvider {
 
     /**
      * Idempotent method. Must be called before accessing the repositories.
+     *
+     * The database lives as long as the process, so it only ever keeps the application context:
+     * callers may pass an Activity.
      */
-    fun initialize(applicationContext: Context) {
+    fun initialize(context: Context) {
         if (transactionRepository == null) {
-            val db = ChuckerDatabase.create(applicationContext)
+            val db = ChuckerDatabase.create(context.applicationContext)
             transactionRepository = HttpTransactionDatabaseRepository(db)
             webSocketMessageRepository = WebSocketMessageDatabaseRepository(db)
         }

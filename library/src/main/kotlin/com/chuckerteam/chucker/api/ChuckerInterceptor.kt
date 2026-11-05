@@ -38,9 +38,12 @@ public class ChuckerInterceptor private constructor(
 
     private val collector = builder.collector ?: ChuckerCollector(builder.context)
 
+    // The interceptor usually lives as long as the app, so it must never keep an Activity.
+    private val applicationContext = builder.context.applicationContext
+
     private val requestProcessor =
         RequestProcessor(
-            builder.context,
+            applicationContext,
             collector,
             builder.maxContentLength,
             headersToRedact,
@@ -50,7 +53,7 @@ public class ChuckerInterceptor private constructor(
     private val responseProcessor =
         ResponseProcessor(
             collector,
-            builder.cacheDirectoryProvider ?: CacheDirectoryProvider { builder.context.filesDir },
+            builder.cacheDirectoryProvider ?: CacheDirectoryProvider { applicationContext.filesDir },
             builder.maxContentLength,
             headersToRedact,
             builder.alwaysReadResponseBody,

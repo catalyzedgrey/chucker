@@ -16,8 +16,12 @@ import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.ui.BaseChuckerActivity
 
 internal class NotificationHelper(
-    val context: Context,
+    anyContext: Context,
 ) {
+    // Held for the collector's lifetime, so never keep an Activity. The parameter has a different
+    // name so that property initializers below can't pick it up instead of this.
+    val context: Context = anyContext.applicationContext
+
     companion object {
         private const val TRANSACTIONS_CHANNEL_ID = "chucker_transactions"
 
