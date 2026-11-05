@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">فارمیٹ شدہ کاپی کریں</string>
     <string name="chucker_request_copied_formatted">فارمیٹ شدہ درخواست کاپی ہو گئی</string>
     <string name="chucker_response_copied_formatted">فارمیٹ شدہ جواب کاپی ہو گیا</string>
+    <string name="chucker_messages">پیغامات</string>
+    <string name="chucker_websocket_open">کھلا</string>
+    <string name="chucker_websocket_no_messages">ابھی تک کوئی پیغام نہیں</string>
+    <string name="chucker_websocket_not_sent">نہیں بھیجا گیا</string>
+    <string name="chucker_websocket_binary">بائنری، %1$s</string>
+    <string name="chucker_websocket_close">بند %1$d</string>
+    <string name="chucker_websocket_failure">ناکامی</string>
+    <string name="chucker_websocket_messages_dropped">ریکارڈ نہ ہونے والے پیغامات: %1$d</string>
 </resources>

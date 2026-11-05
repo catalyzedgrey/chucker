@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">फ़ॉर्मैट किया हुआ कॉपी करें</string>
     <string name="chucker_request_copied_formatted">फ़ॉर्मैट किया हुआ अनुरोध कॉपी हो गया</string>
     <string name="chucker_response_copied_formatted">फ़ॉर्मैट की हुई प्रतिक्रिया कॉपी हो गई</string>
+    <string name="chucker_messages">संदेश</string>
+    <string name="chucker_websocket_open">खुला</string>
+    <string name="chucker_websocket_no_messages">अभी तक कोई संदेश नहीं</string>
+    <string name="chucker_websocket_not_sent">नहीं भेजा गया</string>
+    <string name="chucker_websocket_binary">बाइनरी, %1$s</string>
+    <string name="chucker_websocket_close">बंद %1$d</string>
+    <string name="chucker_websocket_failure">विफलता</string>
+    <string name="chucker_websocket_messages_dropped">रिकॉर्ड न किए गए संदेश: %1$d</string>
 </resources>

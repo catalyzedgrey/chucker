@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">نسخ منسق</string>
     <string name="chucker_request_copied_formatted">تم نسخ الطلب المنسق</string>
     <string name="chucker_response_copied_formatted">تم نسخ الاستجابة المنسقة</string>
+    <string name="chucker_messages">الرسائل</string>
+    <string name="chucker_websocket_open">مفتوح</string>
+    <string name="chucker_websocket_no_messages">لا توجد رسائل بعد</string>
+    <string name="chucker_websocket_not_sent">لم يُرسل</string>
+    <string name="chucker_websocket_binary">ثنائي، %1$s</string>
+    <string name="chucker_websocket_close">إغلاق %1$d</string>
+    <string name="chucker_websocket_failure">فشل</string>
+    <string name="chucker_websocket_messages_dropped">رسائل لم تُسجّل: %1$d</string>
 </resources>

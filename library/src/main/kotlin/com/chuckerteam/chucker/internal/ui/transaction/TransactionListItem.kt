@@ -1,6 +1,5 @@
 package com.chuckerteam.chucker.internal.ui.transaction
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +32,7 @@ import javax.net.ssl.HttpsURLConnection
 
 private const val PATH_MAX_LINES = 4
 private const val SECONDARY_MAX_LINES = 2
+private const val WEBSOCKET_CODE = "WS"
 
 /**
  * A single row of the transactions list.
@@ -42,7 +42,6 @@ private const val SECONDARY_MAX_LINES = 2
  * @param onClick Invoked on a single click.
  * @param onLongClick Invoked on a long click.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TransactionListItem(
     transaction: HttpTransactionTuple,
@@ -57,7 +56,26 @@ internal fun TransactionListItem(
     val code =
         when {
             transaction.status == HttpTransaction.Status.Failed -> "!!!"
+            transaction.isWebSocket -> WEBSOCKET_CODE
             isComplete -> transaction.responseCode.toString()
+            else -> ""
+        }
+    val title =
+        if (transaction.isWebSocket) {
+            transaction.getFormattedPath(encode = false)
+        } else {
+            "${transaction.method} ${transaction.getFormattedPath(encode = false)}"
+        }
+    val duration =
+        when {
+            transaction.isWebSocketOpen -> stringResource(R.string.chucker_websocket_open)
+            isComplete -> transaction.durationString.orEmpty()
+            else -> ""
+        }
+    val size =
+        when {
+            transaction.isWebSocket -> "↑${transaction.sentCount} ↓${transaction.receivedCount}"
+            isComplete -> transaction.totalSizeString
             else -> ""
         }
     val textColor = colorResource(R.color.chucker_status_default)
@@ -86,7 +104,7 @@ internal fun TransactionListItem(
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${transaction.method} ${transaction.getFormattedPath(encode = false)}",
+                    text = title,
                     color = statusColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -142,14 +160,14 @@ internal fun TransactionListItem(
                 modifier = Modifier.weight(2f).padding(start = 56.dp),
             )
             Text(
-                text = if (isComplete) transaction.durationString.orEmpty() else "",
+                text = duration,
                 color = textColor,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = if (isComplete) transaction.totalSizeString else "",
+                text = size,
                 color = textColor,
                 fontSize = 14.sp,
                 textAlign = TextAlign.End,
@@ -170,6 +188,7 @@ private fun HttpTransactionTuple.statusColor(): Color {
     return when {
         (status === HttpTransaction.Status.Failed) -> colorError
         (status === HttpTransaction.Status.Requested) -> colorRequested
+        isWebSocket -> colorDefault
         (responseCode == null) -> colorDefault
         (responseCode!! >= HttpsURLConnection.HTTP_INTERNAL_ERROR) -> color500
         (responseCode!! >= HttpsURLConnection.HTTP_BAD_REQUEST) -> color400

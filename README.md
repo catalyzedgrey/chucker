@@ -157,6 +157,32 @@ object ProtoDecoder : BodyDecoder {
 interceptorBuilder.addBodyDecoder(ProtoDecoder).build()
 ```
 
+### WebSockets 🔌
+
+Interceptors only see the WebSocket handshake, not the messages. To record messages, open your sockets through `ChuckerWebSocketFactory`, which wraps the factory you already use (usually your `OkHttpClient`):
+
+```kotlin
+val webSocketFactory = ChuckerWebSocketFactory.Builder(context, okHttpClient)
+    .collector(chuckerCollector)       // Optional, same as the interceptor's
+    .maxContentLength(250_000L)        // Optional, longer payloads are truncated
+    .maxMessagesPerConnection(1_000)   // Optional, oldest messages are deleted beyond this
+    .redactHeaders("Authorization")    // Optional, applies to the handshake
+    .build()
+
+webSocketFactory.newWebSocket(request, listener)
+```
+
+Each connection shows up in the list as a `WS` row with sent/received message counts, and its detail screen gets a **Messages** tab. Handshakes opened through the factory are skipped by `ChuckerInterceptor`, so they aren't listed twice.
+
+For Socket.IO, set both factories on the options. If you don't, Socket.IO creates its own client and Chucker sees nothing:
+
+```kotlin
+val options = IO.Options().apply {
+    webSocketFactory = chuckerWebSocketFactory  // WebSocket messages
+    callFactory = okHttpClient                  // Polling requests, recorded by ChuckerInterceptor
+}
+```
+
 ### Notification Permission 🔔
 
 Starting with Android 13, your apps needs to request the `android.permission.POST_NOTIFICATIONS` permission to the user in order to show notifications.

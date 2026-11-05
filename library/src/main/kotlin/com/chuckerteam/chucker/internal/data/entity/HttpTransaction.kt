@@ -63,6 +63,7 @@ internal class HttpTransaction(
     @ColumnInfo(name = "responseImageData") var responseImageData: ByteArray?,
     @ColumnInfo(name = "graphQlDetected") var graphQlDetected: Boolean = false,
     @ColumnInfo(name = "graphQlOperationName") var graphQlOperationName: String?,
+    @ColumnInfo(name = "isWebSocket") var isWebSocket: Boolean = false,
 ) {
     @Ignore
     constructor() : this(
@@ -331,6 +332,7 @@ internal class HttpTransaction(
             (isResponseBodyEncoded == other.isResponseBodyEncoded) &&
             (responseImageData?.contentEquals(other.responseImageData ?: byteArrayOf()) != false) &&
             (graphQlOperationName == other.graphQlOperationName) &&
-            (graphQlDetected == other.graphQlDetected)
+            (graphQlDetected == other.graphQlDetected) &&
+            (isWebSocket == other.isWebSocket)
     }
 }

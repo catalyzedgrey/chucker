@@ -8,6 +8,7 @@ import com.chuckerteam.chucker.internal.support.PlainTextDecoder
 import com.chuckerteam.chucker.internal.support.RequestProcessor
 import com.chuckerteam.chucker.internal.support.ResponseProcessor
 import com.chuckerteam.chucker.internal.support.addNonBlankPathSegments
+import com.chuckerteam.chucker.internal.websocket.ChuckerWebSocketTag
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -76,6 +77,10 @@ public class ChuckerInterceptor private constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val transaction = HttpTransaction()
         val request = chain.request()
+        if (request.tag(ChuckerWebSocketTag::class.java) != null) {
+            // Recorded by ChuckerWebSocketFactory, together with its messages.
+            return chain.proceed(request)
+        }
         val path = request.url.encodedPath
         val host = request.url.host
         val shouldSkipPath = skipPaths.contains(path) || skipPathsRegex.any { it.matches(path) }

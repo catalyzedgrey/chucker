@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">整形してコピー</string>
     <string name="chucker_request_copied_formatted">整形したリクエストをコピーしました</string>
     <string name="chucker_response_copied_formatted">整形したレスポンスをコピーしました</string>
+    <string name="chucker_messages">メッセージ</string>
+    <string name="chucker_websocket_open">接続中</string>
+    <string name="chucker_websocket_no_messages">メッセージはまだありません</string>
+    <string name="chucker_websocket_not_sent">未送信</string>
+    <string name="chucker_websocket_binary">バイナリ、%1$s</string>
+    <string name="chucker_websocket_close">クローズ %1$d</string>
+    <string name="chucker_websocket_failure">失敗</string>
+    <string name="chucker_websocket_messages_dropped">記録されなかったメッセージ: %1$d</string>
 </resources>

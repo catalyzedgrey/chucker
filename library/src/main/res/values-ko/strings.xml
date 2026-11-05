@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">포맷된 형태로 복사</string>
     <string name="chucker_request_copied_formatted">포맷된 요청이 복사되었습니다</string>
     <string name="chucker_response_copied_formatted">포맷된 응답이 복사되었습니다</string>
+    <string name="chucker_messages">메시지</string>
+    <string name="chucker_websocket_open">연결됨</string>
+    <string name="chucker_websocket_no_messages">아직 메시지가 없습니다</string>
+    <string name="chucker_websocket_not_sent">전송되지 않음</string>
+    <string name="chucker_websocket_binary">바이너리, %1$s</string>
+    <string name="chucker_websocket_close">닫힘 %1$d</string>
+    <string name="chucker_websocket_failure">실패</string>
+    <string name="chucker_websocket_messages_dropped">기록되지 않은 메시지: %1$d</string>
 </resources>

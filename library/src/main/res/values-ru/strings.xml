@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">Копировать с форматированием</string>
     <string name="chucker_request_copied_formatted">Запрос скопирован с форматированием</string>
     <string name="chucker_response_copied_formatted">Ответ скопирован с форматированием</string>
+    <string name="chucker_messages">Сообщения</string>
+    <string name="chucker_websocket_open">Открыто</string>
+    <string name="chucker_websocket_no_messages">Сообщений пока нет</string>
+    <string name="chucker_websocket_not_sent">Не отправлено</string>
+    <string name="chucker_websocket_binary">Двоичные, %1$s</string>
+    <string name="chucker_websocket_close">Закрытие %1$d</string>
+    <string name="chucker_websocket_failure">Ошибка</string>
+    <string name="chucker_websocket_messages_dropped">Не записано сообщений: %1$d</string>
 </resources>

@@ -81,4 +81,12 @@
     <string name="chucker_copy_formatted">Форматтау арқылы көшіру</string>
     <string name="chucker_request_copied_formatted">Сұраныс форматтаумен көшірілді</string>
     <string name="chucker_response_copied_formatted">Жауап форматталған түрде көшірілді</string>
+    <string name="chucker_messages">Хабарлар</string>
+    <string name="chucker_websocket_open">Ашық</string>
+    <string name="chucker_websocket_no_messages">Әзірге хабарлар жоқ</string>
+    <string name="chucker_websocket_not_sent">Жіберілмеді</string>
+    <string name="chucker_websocket_binary">Бинарлы, %1$s</string>
+    <string name="chucker_websocket_close">Жабу %1$d</string>
+    <string name="chucker_websocket_failure">Қате</string>
+    <string name="chucker_websocket_messages_dropped">Жазылмаған хабарлар: %1$d</string>
 </resources>
