@@ -16,6 +16,7 @@ import com.chuckerteam.chucker.internal.support.FormattedUrl
 import com.chuckerteam.chucker.internal.support.HttpHeaderSerializer
 import com.chuckerteam.chucker.internal.support.JsonConverter
 import com.chuckerteam.chucker.internal.support.SpanTextUtil
+import com.chuckerteam.chucker.internal.websocket.SocketIoDecoder
 import com.google.gson.reflect.TypeToken
 import okhttp3.Headers
 import okhttp3.HttpUrl
@@ -220,6 +221,7 @@ internal class HttpTransaction(
         contentType: String?,
     ): String =
         when {
+            isEngineIoPolling -> SocketIoDecoder.formatPollingPayload(body, url) ?: body
             contentType.isNullOrBlank() -> body
             contentType.contains("json", ignoreCase = true) -> FormatUtils.formatJson(body)
             contentType.contains("xml", ignoreCase = true) -> FormatUtils.formatXml(body)
@@ -243,12 +245,17 @@ internal class HttpTransaction(
     ): CharSequence =
         when {
             // TODO Implement Other Content Types
+            isEngineIoPolling -> formatBody(body.toString(), contentType)
             contentType.isNullOrBlank() -> body
             contentType.contains("json", ignoreCase = true) && context != null -> {
                 SpanTextUtil(context).spanJson(body)
             }
             else -> formatBody(body.toString(), contentType)
         }
+
+    /** Socket.IO's HTTP long-polling transport: bodies are formatted as decoded packets. */
+    private val isEngineIoPolling: Boolean
+        get() = SocketIoDecoder.isEngineIoPollingUrl(url)
 
     private fun formatBytes(bytes: Long): String = FormatUtils.formatByteCount(bytes, true)
 

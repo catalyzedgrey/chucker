@@ -1,6 +1,7 @@
 package com.chuckerteam.chucker.internal.data.repository
 
 import androidx.lifecycle.LiveData
+import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import com.chuckerteam.chucker.internal.data.room.ChuckerDatabase
 
@@ -18,6 +19,12 @@ internal interface WebSocketMessageRepository {
     )
 
     fun getMessages(transactionId: Long): LiveData<List<WebSocketMessage>>
+
+    /**
+     * Messages of the WebSocket connections among [transactions], keyed by transaction id, in
+     * order. Blocking: call it off the main thread.
+     */
+    fun getMessagesForExport(transactions: List<HttpTransaction>): Map<Long, List<WebSocketMessage>>
 }
 
 internal class WebSocketMessageDatabaseRepository(
@@ -37,4 +44,17 @@ internal class WebSocketMessageDatabaseRepository(
     }
 
     override fun getMessages(transactionId: Long): LiveData<List<WebSocketMessage>> = dao.getForTransaction(transactionId)
+
+    override fun getMessagesForExport(transactions: List<HttpTransaction>): Map<Long, List<WebSocketMessage>> =
+        transactions
+            .filter { it.isWebSocket }
+            .map { it.id }
+            // SQLite limits how many values an IN clause can bind.
+            .chunked(MAX_QUERY_PARAMETERS)
+            .flatMap(dao::getForTransactions)
+            .groupBy { it.transactionId }
+
+    private companion object {
+        const val MAX_QUERY_PARAMETERS = 500
+    }
 }

@@ -208,7 +208,7 @@ private fun WebSocketMessageRow(
                 fontFamily = FontFamily.Monospace,
             )
             Text(
-                text = item.frame?.label ?: message.label(),
+                text = item.label(),
                 color = accent,
                 fontSize = 12.sp,
                 fontWeight = if (item.frame?.event != null) FontWeight.Bold else FontWeight.Normal,
@@ -244,6 +244,14 @@ private fun WebSocketMessageRow(
             )
         }
     }
+}
+
+@Composable
+private fun WebSocketMessageItem.label(): String {
+    val attachment = attachment ?: return frame?.label ?: message.label()
+    val attachmentLabel =
+        stringResource(R.string.chucker_websocket_attachment, attachment.index, attachment.count, attachment.parentLabel)
+    return "$attachmentLabel · ${message.label()}"
 }
 
 @Composable
@@ -355,6 +363,24 @@ private fun WebSocketMessagesContentNoMatchesPreview() {
             openedAt = PREVIEW_OPENED_AT,
             connectionUrl = "https://example.com/socket.io/?EIO=4",
             searchQuery = "nothing matches this",
+        )
+    }
+}
+
+@Preview(name = "Binary event with attachment", showBackground = true)
+@Composable
+private fun WebSocketMessagesContentAttachmentPreview() {
+    ChuckerTheme {
+        WebSocketMessagesContent(
+            messages =
+                listOf(
+                    previewMessage(1, Direction.SENT, """451-["upload",{"_placeholder":true,"num":0}]"""),
+                    previewMessage(2, Direction.SENT, "89504e470d0a1a0a", Type.BINARY),
+                    previewMessage(3, Direction.RECEIVED, """43["stored"]"""),
+                ),
+            openedAt = PREVIEW_OPENED_AT,
+            connectionUrl = "https://example.com/socket.io/?EIO=4",
+            searchQuery = "",
         )
     }
 }

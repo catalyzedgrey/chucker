@@ -162,7 +162,11 @@ internal class MainActivity : BaseChuckerActivity() {
             getExportDialogData(stringId),
             onPositiveClick = {
                 exportTransactions(EXPORT_TXT_FILE_NAME) { transactions ->
-                    TransactionListDetailsSharable(transactions, encodeUrls = false)
+                    TransactionListDetailsSharable(
+                        transactions,
+                        encodeUrls = false,
+                        webSocketMessages = viewModel.getWebSocketMessages(transactions),
+                    )
                 }
             },
         )
@@ -184,6 +188,7 @@ internal class MainActivity : BaseChuckerActivity() {
                             transactions,
                             getString(R.string.chucker_name),
                             getString(R.string.chucker_version),
+                            viewModel.getWebSocketMessages(transactions),
                         ),
                     )
                 }
@@ -333,12 +338,14 @@ internal class MainActivity : BaseChuckerActivity() {
             showToast(applicationContext.getString(R.string.chucker_save_empty_text))
             return null
         }
+        val webSocketMessages = viewModel.getWebSocketMessages(transactions)
         return withContext(Dispatchers.IO) {
             when (exportType) {
                 TEXT -> {
                     TransactionListDetailsSharable(
                         transactions,
                         encodeUrls = false,
+                        webSocketMessages = webSocketMessages,
                     ).toSharableContent(this@MainActivity)
                 }
 
@@ -348,6 +355,7 @@ internal class MainActivity : BaseChuckerActivity() {
                             transactions,
                             getString(R.string.chucker_name),
                             getString(R.string.chucker_version),
+                            webSocketMessages,
                         ).byteInputStream()
                         .source()
                         .buffer()

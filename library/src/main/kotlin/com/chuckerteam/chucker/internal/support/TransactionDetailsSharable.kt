@@ -3,12 +3,18 @@ package com.chuckerteam.chucker.internal.support
 import android.content.Context
 import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
+import com.chuckerteam.chucker.internal.data.entity.WebSocketMessage
 import okio.Buffer
 import okio.Source
 
+/**
+ * @param webSocketMessages The connection's messages, when [transaction] is a WebSocket. They are
+ * appended after the response as a timeline.
+ */
 internal class TransactionDetailsSharable(
     private val transaction: HttpTransaction,
     private val encodeUrls: Boolean,
+    private val webSocketMessages: List<WebSocketMessage> = emptyList(),
 ) : Sharable {
     override fun toSharableContent(context: Context): Source =
         Buffer().apply {
@@ -70,5 +76,21 @@ internal class TransactionDetailsSharable(
                     transaction.getFormattedResponseBody()
                 },
             )
+            if (transaction.isWebSocket) {
+                writeUtf8("\n\n")
+                writeUtf8("---------- ${context.getString(R.string.chucker_messages)} ----------\n\n")
+                writeUtf8(
+                    if (webSocketMessages.isEmpty()) {
+                        context.getString(R.string.chucker_websocket_no_messages)
+                    } else {
+                        WebSocketMessagesFormatter.format(
+                            context = context,
+                            messages = webSocketMessages,
+                            openedAt = transaction.requestDate,
+                            connectionUrl = transaction.url,
+                        )
+                    },
+                )
+            }
         }
 }

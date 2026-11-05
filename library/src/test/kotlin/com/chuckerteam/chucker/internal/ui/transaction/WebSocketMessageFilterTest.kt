@@ -68,6 +68,41 @@ internal class WebSocketMessageFilterTest {
     }
 
     @Test
+    fun `links binary frames to the binary event that announced them`() {
+        val items =
+            listOf(
+                message(1, Direction.SENT, """452-["upload",{"_placeholder":true,"num":0},{"_placeholder":true,"num":1}]"""),
+                message(2, Direction.RECEIVED, "01", Type.BINARY),
+                message(3, Direction.SENT, "02", Type.BINARY),
+                message(4, Direction.SENT, "03", Type.BINARY),
+                message(5, Direction.SENT, "04", Type.BINARY),
+            ).toMessageItems(isEngineIo = true)
+
+        assertThat(items.map { it.attachment?.let { a -> "${a.index}/${a.count} ${a.parentLabel}" } })
+            .containsExactly(
+                null,
+                // Attachments follow in the sender's direction only.
+                null,
+                "1/2 BINARY_EVENT upload",
+                "2/2 BINARY_EVENT upload",
+                // All announced attachments arrived; later binary frames stand alone.
+                null,
+            ).inOrder()
+    }
+
+    @Test
+    fun `a text message cancels attachments that never arrived`() {
+        val items =
+            listOf(
+                message(1, Direction.SENT, """451-["upload",{"_placeholder":true,"num":0}]"""),
+                message(2, Direction.SENT, """42["chat"]"""),
+                message(3, Direction.SENT, "01", Type.BINARY),
+            ).toMessageItems(isEngineIo = true)
+
+        assertThat(items.last().attachment).isNull()
+    }
+
+    @Test
     fun `shows event arguments without the event name`() {
         assertThat(socketIo.first().displayPayload).isEqualTo("""[{"text":"hi"}]""")
     }

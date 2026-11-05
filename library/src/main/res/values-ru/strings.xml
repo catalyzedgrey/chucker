@@ -93,4 +93,5 @@
     <string name="chucker_websocket_filter_received">Полученные</string>
     <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
     <string name="chucker_websocket_no_matches">Нет подходящих сообщений</string>
+    <string name="chucker_websocket_attachment">Вложение %1$d/%2$d для %3$s</string>
 </resources>

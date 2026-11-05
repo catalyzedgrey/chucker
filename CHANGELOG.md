@@ -7,6 +7,10 @@ Please add your entries according to this format.
 
 ### Added
 
+-   Text and HAR exports include WebSocket messages. HAR entries use Chrome DevTools' `_resourceType: "websocket"` and `_webSocketMessages` fields, with binary data as base64
+-   Socket.IO HTTP long-polling bodies (Engine.IO 3 and 4) are shown as decoded packets, one per line. The raw body is kept for copy, cURL and HAR
+-   Binary frames carrying a Socket.IO binary event's attachments are labelled with that event in the Messages tab and in text exports
+
 -   Socket.IO decoding in the WebSocket Messages tab: packet type, namespace, ack id and event name for each frame, with the event's arguments shown as JSON. Works with Engine.IO 3 and 4, detected from the `EIO` query parameter
 -   Messages tab filters (sent, received, Engine.IO ping/pong) and search over payloads and event names
 -   `ChuckerWebSocketFactory` records WebSocket connections and their messages, including Socket.IO over WebSocket. Connections appear in the list as `WS` rows with message counts, with a Messages tab in their details. Available in the no-op artifact too

@@ -7,6 +7,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
 internal class SocketIoDecoderTest {
+    private companion object {
+        const val POLLING_V4 = "https://example.com/socket.io/?EIO=4&transport=polling"
+        const val POLLING_V3 = "https://example.com/socket.io/?EIO=3&transport=polling"
+    }
+
     private fun decode(payload: String) = requireNotNull(SocketIoDecoder.decode(payload)) { "Not decoded: $payload" }
 
     @ParameterizedTest
@@ -132,6 +137,35 @@ internal class SocketIoDecoderTest {
         assertThat(frame.packet).isEqualTo(Packet.EVENT)
         assertThat(frame.event).isNull()
         assertThat(frame.data(payload)).isEqualTo("""["unterminated""")
+    }
+
+    @Test
+    fun `formats an Engine IO 4 polling payload`() {
+        val payload = "0{\"sid\":\"a\"}\u001e40\u001e42[\"chat\",1]\u001ebAQI="
+
+        assertThat(SocketIoDecoder.formatPollingPayload(payload, POLLING_V4))
+            .isEqualTo("OPEN {\"sid\":\"a\"}\nCONNECT\nEVENT chat [1]\nBINARY AQI=")
+    }
+
+    @Test
+    fun `formats an Engine IO 3 length-prefixed polling payload`() {
+        val payload = "2:40" + "12:42[\"chat\",1]"
+
+        assertThat(SocketIoDecoder.formatPollingPayload(payload, POLLING_V3)).isEqualTo("CONNECT\nEVENT chat [1]")
+    }
+
+    @Test
+    fun `leaves bodies that aren't polling payloads alone`() {
+        assertThat(SocketIoDecoder.formatPollingPayload("ok", POLLING_V4)).isNull()
+        assertThat(SocketIoDecoder.formatPollingPayload("", POLLING_V4)).isNull()
+        assertThat(SocketIoDecoder.formatPollingPayload("5:40", POLLING_V3)).isNull()
+    }
+
+    @Test
+    fun `detects the polling transport`() {
+        assertThat(SocketIoDecoder.isEngineIoPollingUrl(POLLING_V4)).isTrue()
+        assertThat(SocketIoDecoder.isEngineIoPollingUrl("https://example.com/socket.io/?EIO=4&transport=websocket")).isFalse()
+        assertThat(SocketIoDecoder.isEngineIoPollingUrl("https://example.com/poll?transport=polling")).isFalse()
     }
 
     @Test

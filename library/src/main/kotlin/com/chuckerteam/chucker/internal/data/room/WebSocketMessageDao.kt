@@ -17,6 +17,10 @@ internal interface WebSocketMessageDao {
     @Query("SELECT * FROM ws_messages WHERE transactionId = :transactionId ORDER BY seq ASC")
     suspend fun getAllForTransaction(transactionId: Long): List<WebSocketMessage>
 
+    /** Blocking, for exports that already run off the main thread. */
+    @Query("SELECT * FROM ws_messages WHERE transactionId IN (:transactionIds) ORDER BY transactionId, seq")
+    fun getForTransactions(transactionIds: List<Long>): List<WebSocketMessage>
+
     /** Keeps only the newest [keep] messages of a connection. */
     @Query(
         "DELETE FROM ws_messages WHERE transactionId = :transactionId AND id NOT IN " +

@@ -174,7 +174,11 @@ webSocketFactory.newWebSocket(request, listener)
 
 Each connection shows up in the list as a `WS` row with sent/received message counts, and its detail screen gets a **Messages** tab. Handshakes opened through the factory are skipped by `ChuckerInterceptor`, so they aren't listed twice.
 
-The **Messages** tab can filter by direction and search payloads. For Socket.IO connections (detected by the `EIO` query parameter that every Engine.IO client sends) it also decodes each frame: rows show the packet and event, such as `EVENT chat` or `ACK #7`, with the event's arguments as JSON. Engine.IO ping/pong frames are hidden by default.
+The **Messages** tab can filter by direction and search payloads. For Socket.IO connections (detected by the `EIO` query parameter that every Engine.IO client sends) it also decodes each frame: rows show the packet and event, such as `EVENT chat` or `ACK #7`, with the event's arguments as JSON. Engine.IO ping/pong frames are hidden by default. Binary frames that carry a Socket.IO binary event's attachments are labelled with the event they belong to.
+
+Socket.IO's HTTP long-polling requests are captured by `ChuckerInterceptor` like any other request. Their bodies are shown as one decoded packet per line, while "Copy raw", cURL and HAR keep the original body.
+
+Text and HAR exports include each connection's messages. HAR files use Chrome DevTools' `_webSocketMessages` format, so the messages show up when you import the file into DevTools.
 
 For Socket.IO, set both factories on the options. If you don't, Socket.IO creates its own client and Chucker sees nothing:
 

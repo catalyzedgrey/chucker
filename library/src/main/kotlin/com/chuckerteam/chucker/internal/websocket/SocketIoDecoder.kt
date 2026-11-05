@@ -70,6 +70,15 @@ internal data class SocketIoFrame(
  */
 internal object SocketIoDecoder {
     private const val ENGINE_IO_QUERY_PARAMETER = "EIO"
+    private const val TRANSPORT_QUERY_PARAMETER = "transport"
+    private const val TRANSPORT_POLLING = "polling"
+    private const val ENGINE_IO_V3 = "3"
+
+    /** Separates packets in an Engine.IO 4 polling payload. */
+    private const val RECORD_SEPARATOR = '\u001e'
+
+    /** Engine.IO 4 sends binary packets over polling as base64 prefixed with this. */
+    private const val BASE64_BINARY_PREFIX = 'b'
 
     private val enginePackets =
         mapOf(
@@ -98,6 +107,55 @@ internal object SocketIoDecoder {
      * Socket.IO on, so it's a more reliable signal than the default `/socket.io/` path.
      */
     fun isEngineIoUrl(url: String?): Boolean = url?.toHttpUrlOrNull()?.queryParameter(ENGINE_IO_QUERY_PARAMETER) != null
+
+    /** True for Engine.IO's HTTP long-polling transport, whose bodies hold several packets. */
+    fun isEngineIoPollingUrl(url: String?): Boolean {
+        val httpUrl = url?.toHttpUrlOrNull() ?: return false
+        return httpUrl.queryParameter(ENGINE_IO_QUERY_PARAMETER) != null &&
+            httpUrl.queryParameter(TRANSPORT_QUERY_PARAMETER) == TRANSPORT_POLLING
+    }
+
+    /**
+     * Formats an Engine.IO polling body as one decoded packet per line, e.g.
+     * `EVENT chat [{"text":"hi"}]`. Engine.IO 4 separates packets with a record separator;
+     * Engine.IO 3 prefixes each with its length (`12:42["chat"]`).
+     *
+     * @return null if the body isn't a valid polling payload, so callers can show it raw.
+     */
+    fun formatPollingPayload(
+        payload: String,
+        url: String?,
+    ): String? {
+        val isV3 = url?.toHttpUrlOrNull()?.queryParameter(ENGINE_IO_QUERY_PARAMETER) == ENGINE_IO_V3
+        val packets = (if (isV3) splitV3Packets(payload) else payload.split(RECORD_SEPARATOR)) ?: return null
+        val lines = packets.map { formatPacket(it) ?: return null }
+        return lines.takeIf { it.isNotEmpty() }?.joinToString(separator = "\n")
+    }
+
+    private fun formatPacket(packet: String): String? {
+        if (packet.firstOrNull() == BASE64_BINARY_PREFIX) {
+            return "BINARY ${packet.substring(1)}"
+        }
+        val frame = decode(packet) ?: return null
+        val data = frame.data(packet)
+        return if (data.isEmpty()) frame.label else "${frame.label} $data"
+    }
+
+    /** Splits `<length>:<packet>` framing; null if the framing is broken. */
+    private fun splitV3Packets(payload: String): List<String>? {
+        val packets = mutableListOf<String>()
+        var i = 0
+        while (i < payload.length) {
+            val colon = payload.indexOf(':', i)
+            if (colon == -1) return null
+            val length = payload.substring(i, colon).toIntOrNull() ?: return null
+            val end = colon + 1 + length
+            if (end > payload.length) return null
+            packets += payload.substring(colon + 1, end)
+            i = end
+        }
+        return packets
+    }
 
     /** Returns null if [payload] isn't an Engine.IO frame. */
     @Suppress("ReturnCount")

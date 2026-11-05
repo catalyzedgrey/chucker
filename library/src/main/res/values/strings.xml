@@ -94,4 +94,5 @@
     <string name="chucker_websocket_filter_received">Received</string>
     <string name="chucker_websocket_filter_ping_pong">Ping/pong</string>
     <string name="chucker_websocket_no_matches">No matching messages</string>
+    <string name="chucker_websocket_attachment">Attachment %1$d/%2$d of %3$s</string>
 </resources>

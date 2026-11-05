@@ -43,7 +43,8 @@ internal class TransactionActivity : BaseChuckerActivity() {
                     onShareText = {
                         shareTransactionAsText(EXPORT_TXT_FILE_NAME) { transaction ->
                             val encodeUrls = viewModel.encodeUrl.value!!
-                            TransactionDetailsSharable(transaction, encodeUrls)
+                            val messages = viewModel.webSocketMessagesForExport(transaction)
+                            TransactionDetailsSharable(transaction, encodeUrls, messages)
                         }
                     },
                     onShareCurl = {
@@ -54,16 +55,19 @@ internal class TransactionActivity : BaseChuckerActivity() {
                     onShareFile = {
                         shareTransactionAsFile(EXPORT_TXT_FILE_NAME) { transaction ->
                             val encodeUrls = viewModel.encodeUrl.value!!
-                            TransactionDetailsSharable(transaction, encodeUrls)
+                            val messages = viewModel.webSocketMessagesForExport(transaction)
+                            TransactionDetailsSharable(transaction, encodeUrls, messages)
                         }
                     },
                     onShareHar = {
                         shareTransactionAsFile(EXPORT_HAR_FILE_NAME) { transaction ->
+                            val messages = viewModel.webSocketMessagesForExport(transaction)
                             TransactionDetailsHarSharable(
                                 HarUtils.harStringFromTransactions(
                                     listOf(transaction),
                                     getString(R.string.chucker_name),
                                     getString(R.string.chucker_version),
+                                    mapOf(transaction.id to messages),
                                 ),
                             )
                         }
@@ -75,15 +79,15 @@ internal class TransactionActivity : BaseChuckerActivity() {
 
     private fun shareTransactionAsText(
         fallbackFileName: String,
-        block: (HttpTransaction) -> Sharable,
+        block: suspend (HttpTransaction) -> Sharable,
     ): Boolean {
         val transaction = viewModel.transaction.value
         if (transaction == null) {
             showToast(getString(R.string.chucker_request_not_ready))
             return true
         }
-        val sharable = block(transaction)
         lifecycleScope.launch {
+            val sharable = block(transaction)
             val shareIntent =
                 sharable.shareAsUtf8Text(
                     activity = this@TransactionActivity,

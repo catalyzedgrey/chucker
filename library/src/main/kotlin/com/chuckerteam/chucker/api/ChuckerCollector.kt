@@ -135,11 +135,12 @@ public class ChuckerCollector
             if (transactions.isEmpty()) {
                 return null
             }
+            val webSocketMessages = RepositoryProvider.webSocketMessages().getMessagesForExport(transactions)
 
             val sharableTransactions =
                 when (exportFormat) {
                     ExportFormat.LOG -> {
-                        TransactionListDetailsSharable(transactions, encodeUrls = false)
+                        TransactionListDetailsSharable(transactions, encodeUrls = false, webSocketMessages)
                     }
                     ExportFormat.HAR -> {
                         TransactionDetailsHarSharable(
@@ -151,6 +152,7 @@ public class ChuckerCollector
                                             context.getString(R.string.chucker_name),
                                             context.getString(R.string.chucker_version),
                                         ),
+                                        webSocketMessages,
                                     ),
                                 ),
                         )
